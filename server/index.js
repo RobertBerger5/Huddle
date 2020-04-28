@@ -156,8 +156,32 @@ const sleep = (sec) => {
 }
 
 function clean(places) {
-	//TODO: only get what we need out of it, including fixing up images and such
-	return places;
+  //create our return
+  var ret = {results : []};
+
+  //begin parsing our results
+  let i = 0;
+  while(places.results[i]) {
+    //get our current result values
+    let cur = places.results[i];
+    //Our temp to push to our ret array
+    let temp = {
+      lat: cur.geometry.location.lat, //latitude
+      lng: cur.geometry.location.lng, //longitude
+      name: cur.name, //place name
+      photoRaw: cur.photos[0].photo_reference, //the raw photo reference for the api call
+      price_level: cur.price_level, //price Level
+      rating: cur.rating, //User ratings
+      user_ratings_total: cur.user_ratings_total //how many ratings
+    };
+
+    //Push cleaned values to returned array
+    ret.results.push(temp);
+    i++; //inrement to the next value
+  }
+
+  //return our cleaned array
+  return ret;
 }
 
 //for now, just return this object from Myles' API call
