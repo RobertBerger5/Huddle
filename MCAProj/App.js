@@ -1,15 +1,20 @@
-import { AppLoading, Asset, Font, Icon } from 'expo'
 import React from 'react'
-import { StatusBar, StyleSheet, View, Text } from 'react-native'
+// import { AppLoading, Asset, Font, Icon } from 'expo'
+// import { StatusBar, StyleSheet, View, Text } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from './node_modules/@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { StatusBar, StyleSheet, View,} from 'react-native';
 import HomeScreen from './screens/HomeScreen.js';
 import TopPicksScreen from './screens/TopPicksScreen';
-
-
+import StartScreen from './screens/StartScreen.js';
+import WaitScreen from './screens/WaitScreen.js';
+import HostWaitScreen from './screens/HostWaitScreen.js';
+import { createStackNavigator } from '@react-navigation/stack';
+import JoinScreen from './screens/JoinScreen.js';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 function MyTabs() {
   return (
@@ -37,6 +42,33 @@ function MyTabs() {
   );
 }
 
+function Swipe(){
+  return(
+      <View style={styles.container}>
+          <StatusBar hidden />
+       <MyTabs/>
+      </View>
+  )
+}
+
+//Navigation set up for all of the main pages
+function MyStack() {
+  return (
+    <Stack.Navigator
+    screenOptions={{
+      headerShown: false
+    }}>
+      <Stack.Screen name="Start" component={StartScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Top Picks" component={TopPicksScreen} />
+      <Stack.Screen name="Swipe" component={Swipe} />
+      <Stack.Screen name="Join" component={JoinScreen} />
+      <Stack.Screen name="Wait" component={WaitScreen} />
+      <Stack.Screen name="HostWait" component={HostWaitScreen} />
+    </Stack.Navigator>
+  );
+}
+
 export default class App extends React.Component {
   state = {
     isLoadingComplete: false,
@@ -45,10 +77,7 @@ export default class App extends React.Component {
   render() {
     return(
       <NavigationContainer>
-        <View style={styles.container}>
-          <StatusBar hidden />
-       <MyTabs/>
-      </View>
+        <MyStack />
       </NavigationContainer>
     )
 
