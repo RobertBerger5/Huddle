@@ -37,6 +37,7 @@
 			socket.emit('swipe', locI, swipe);
 		}
 
+
 		socket.on('user_err',(msg)=>{
 			log(msg,"red");
 		});
@@ -75,19 +76,16 @@
 		});
 		socket.on('results', (results) => {
 			search_results=results;
-			log('(got results, see search_results to view)','#faa');
+			log('(got results, see search_results to view)','#afa');
 		});
 		socket.on('swipe_ack', (id) => {
-			log('swiped on '+id+', safe to remove from pile','#f66');
+			log('swiped on '+id+', safe to remove from pile','#6f6');
 		});
 		socket.on('vote_update', (swipe,id) => {
 			log('someone swiped '+swipe+' on '+id,'#f66');
 		});
 		
-
-
-
-
+		
 		function log(msg,color) {
 			$('body').append($('<p>').css('color', color).text(msg));
 		}

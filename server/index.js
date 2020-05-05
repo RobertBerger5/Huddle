@@ -16,8 +16,10 @@ app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/test.html');
 });
 
-/*TODO: don't let people join after the room has started
+/*TODO:
+	don't let people join after the room has started
 	add more checks, don't let them do things like swipe if they aren't in a room, or if the room doesn't have results
+	copy/paste search_results from browser into dummy call so we don't waste money while testing things other than the API calls
 */
 
 /*global hash map for rooms with the key being the room id and value as object:
@@ -79,20 +81,19 @@ io.on('connection', (socket) => {
 		socket.mainRoom = id; //so we know which room they belong to
 		//initialize the room
 		rooms[id] = { people: 1, type: type, status: "created", results: null };
-		socket.emit('created',id);
+		socket.emit('created', id);
 		console.log("room created with id: " + id);
 
 		setTimeout(() => {
-			if(id in rooms){
+			if (id in rooms) {
 				io.to(id).emit('ended');
 				io.sockets.in(id).leave(id); //TODO: check if that's right
 			}
-			console.log("time limit exceeded for room " + id+ ", everyone booted");
+			console.log("time limit exceeded for room " + id + ", everyone booted");
 		}, MAX_TIME);
 
 		//SEARCH for the API call
-		getResults(id,socket, 'restaurant', '44.4583', '-93.1616', '5000'); //emits 'results' with API results back to room creator
-		//TODO: tell the creator when the room is ready to be joined??? Or just hold off on giving them the "room created" event. Because now if someone enters the room id SUPER fast, the server will send the API call results before they're ready, so the client will receive "null"
+		getResults(id, socket, 'restaurant', '44.4583', '-93.1616', '5000'); //emits 'results' with API results back to room creator
 	});
 
 	//request to join a room
@@ -108,7 +109,7 @@ io.on('connection', (socket) => {
 			socket.mainRoom = id;//so we know which room they belong to
 			rooms[id].people++;//one more person in
 			socket.emit('join_ack');//send only to new user
-			io.to(id).emit('other_joined',rooms[id].people);//send to all, including new user
+			io.to(id).emit('other_joined', rooms[id].people);//send to all, including new user
 			console.log("user joined room " + id);
 
 			//send them the results to load in
@@ -120,8 +121,8 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('start', () => {
-		if(socket.mainRoom==null){
-			socket.emit('user_err','Need to be in a room to start session');
+		if (socket.mainRoom == null) {
+			socket.emit('user_err', 'Need to be in a room to start session');
 			console.log("(someone tried to start while not in a session)");
 			return;
 		}
@@ -135,7 +136,6 @@ io.on('connection', (socket) => {
 
 	socket.on('disconnect', () => {
 		leaveRoom(socket);
-		console.log('user left');
 	});
 
 	//API results returned to user, and they're making choices
@@ -143,9 +143,14 @@ io.on('connection', (socket) => {
 		//user swiped {swipe} on {results.candidates[locI]}
 		//very minimal at the moment, doesn't even check if they're in a room and that the room has searched / has results
 		let id = socket.mainRoom;
+		if (id == null) {
+			socket.emit('user_err', 'Cannot swipe without being in a room');
+			console.log("(someone tried to swipe without being in a room)");
+			return;
+		}
 		console.log("user voted " + swipe + " for " + rooms[id].results.results[locI].name);
-		socket.emit('swipe_ack',locI);
-		io.to(id).emit('vote_update',swipe,locI);
+		socket.emit('swipe_ack', locI);
+		io.to(id).emit('vote_update', swipe, locI);
 	});
 });
 
@@ -180,25 +185,34 @@ function leaveRoom(socket) {
 
 //get results
 function getResults(id, socket, type, lat, lon, radius) {
+	
+	if(true){ //TODO: these are dummy results, change to "false" or delete before sending to production
+		rooms[id].results=makeDummyCall();
+		io.to(id).emit('results', rooms[id].results);
+		return;
+	}
+
+
+
 	//create our api call
 	var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + lon + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
 	fetch(reqURL)
-	.then(res => res.json())
-	.then(json => {
-		//api call return json, then cleans it
-		let ret = clean(json);
+		.then(res => res.json())
+		.then(json => {
+			//api call return json, then cleans it
+			let ret = clean(json);
 
-		//io.to(id).emit('results', ret);//send creator the results
-		rooms[id].results = ret;//remember it on the server
+			//io.to(id).emit('results', ret);//send creator the results
+			rooms[id].results = ret;//remember it on the server
 
-		//parse through our results to get all the photos
-		let i = 0;
-		while(rooms[id].results.results[i]) {
-			getPhoto(id, i);
-			i++;
-		}
+			//parse through our results to get all the photos
+			let i = 0;
+			while (rooms[id].results.results[i]) {
+				getPhoto(id, i);
+				i++;
+			}
 
-	});
+		});
 }
 
 //Gets the photo urls for every photo by following the api redirect
@@ -214,8 +228,8 @@ function getPhoto(id, index) {
 		//console.log(rooms[id].results.results[index].photo);
 
 		//checks to see if all photos have loaded: if they have, then we send the results
-		if(checkPhotos(rooms[id].results)){
-			io.to(id).emit('results', rooms[id].results);//send creator the results
+		if (checkPhotos(rooms[id].results)) {
+			io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
 			//console.log(rooms[id].results);
 		}
 	});
@@ -224,7 +238,7 @@ function getPhoto(id, index) {
 //checks to see if all of the photos have loaded in
 function checkPhotos(ret) {
 	let i = 0; //parse through all values from the photos
-	while(ret.results[i]) {
+	while (ret.results[i]) {
 		if (ret.results[i].photo == null) return false; //return false if not all have been updated
 		i++;
 	}
@@ -234,490 +248,251 @@ function checkPhotos(ret) {
 
 //Clean the api results to just what we need
 function clean(places) {
-  //create our return
-  var ret = {results : []};
+	//create our return
+	var ret = { results: [] };
 
-  //begin parsing our results
-  let i = 0;
-  while(places.results[i]) {
-    //get our current result values
-    let cur = places.results[i];
-    //Our temp to push to our ret array
-    let temp = {
-      lat: cur.geometry.location.lat, //latitude
-      lng: cur.geometry.location.lng, //longitude
-      name: cur.name, //place name
-      photoRaw: cur.photos[0].photo_reference, //the raw photo reference for the api call
+	//begin parsing our results
+	let i = 0;
+	while (places.results[i]) {
+		//get our current result values
+		let cur = places.results[i];
+		//Our temp to push to our ret array
+		let temp = {
+			lat: cur.geometry.location.lat, //latitude
+			lng: cur.geometry.location.lng, //longitude
+			name: cur.name, //place name
+			photoRaw: cur.photos[0].photo_reference, //the raw photo reference for the api call
 			photo: null, //retrieve this later
-      price_level: cur.price_level, //price Level
-      rating: cur.rating, //User ratings
-      user_ratings_total: cur.user_ratings_total //how many ratings
-    };
+			price_level: cur.price_level, //price Level
+			rating: cur.rating, //User ratings
+			user_ratings_total: cur.user_ratings_total //how many ratings
+		};
 
-    //Push cleaned values to returned array
-    ret.results.push(temp);
-    i++; //increment to the next value
-  }
+		//Push cleaned values to returned array
+		ret.results.push(temp);
+		i++; //increment to the next value
+	}
 
-  //return our cleaned array
-  return ret;
+	//return our cleaned array
+	return ret;
 }
 
 //for now, just return this object from Myles' API call
 function makeDummyCall() {
 	console.log("dummyCall");
 	let ret = {
-		"html_attributions": [],
-		"results": [
+		results: [
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8585416,
-						"lng": 151.2100441
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.85717357010728,
-							"lng": 151.2112493798927
-						},
-						"southwest": {
-							"lat": -33.85987322989273,
-							"lng": 151.2085497201073
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/bar-71.png",
-				"id": "8e980ad0c819c33cdb1cea31e72d654ca61a7065",
-				"name": "Cruise Bar",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 2988,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/115126912503729443190\"\u003eEileen L\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAA8x7-Xnlx-5N1XTCofqaUfh7uaUjoyoG48Y5gl3MutsTTaCeZui356UtxnXJwhaH4s0-Xgc2Sj3f_Qggb3voYa10BJZbRi9PyMlaXFChD3aDtgQaBiBkmje_4KXA4GbO7EhBRKsO4cRPyFEmDLPbG-Pr7GhRt0et-QrSiCeio-6H7lf1EQhwUbw",
-						"width": 5312
-					}
-				],
-				"place_id": "ChIJi6C1MxquEmsR9-c-3O48ykI",
-				"plus_code": {
-					"compound_code": "46R6+H2 The Rocks, New South Wales",
-					"global_code": "4RRH46R6+H2"
-				},
-				"price_level": 2,
-				"rating": 4,
-				"reference": "ChIJi6C1MxquEmsR9-c-3O48ykI",
-				"scope": "GOOGLE",
-				"types": ["bar", "restaurant", "food", "point_of_interest", "establishment"],
-				"user_ratings_total": 1008,
-				"vicinity": "Level 1, 2 and 3, Overseas Passenger Terminal, Circular Quay W, The Rocks"
+				lat: 0,
+				lng: 0,
+				name: 'HEADS UP - DUMMY CALL',
+				photoRaw: 'CmRaAAAANHU8QT4uJ9ax7JEvO-nGA4eHRSlZPod7n67xF4BVEG-p83W-l2BNwwgCsfSU0ayXNy_QL8Pux_atclk_SvSUCBTk5UunNADp5p61pCsLjPEWtHh1Jf_kJo3F-HfqwspNEhCiosWlLzbT19Y2Ua2cWweNGhRHWrTSN0Nl81m9t8c80jn83Ye4Ew',
+				photo: 'https://autostart.24sata.hr/media/dg/26/0e/3831ec56637fa92ab7e2.png',
+				price_level: 1,
+				rating: 5,
+				user_ratings_total: 1
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8677371,
-						"lng": 151.2016936
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.86637842010727,
-							"lng": 151.2031597798928
-						},
-						"southwest": {
-							"lat": -33.86907807989272,
-							"lng": 151.2004601201073
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png",
-				"id": "f1e044040bd03ff06e19de4798b52dd926855281",
-				"name": "Sydney Harbour Dinner Cruises",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 2459,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/109764923610545394994\"\u003eA Google User\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAcV3V1xtjxaSNHqLBKcsCdjzvxg2MFUpwGgdrwEFODvNEh_pBXZkEtmbx6yKSp5Z6GauLUSKVnhnO6N5Pjo-cqwy3JNmAxYOLw7vFAAcxMgLvAzUiKpXjNU86oTLO7VLuEhCQVrld0Df9Rq1btY9Q-7LTGhSQC0LXLF7Oc_ep2xon0gxaL_8KcQ",
-						"width": 2500
-					}
-				],
-				"place_id": "ChIJM1mOVTS6EmsRKaDzrTsgids",
-				"plus_code": {
-					"compound_code": "46J2+WM Sydney, New South Wales",
-					"global_code": "4RRH46J2+WM"
-				},
-				"rating": 5,
-				"reference": "ChIJM1mOVTS6EmsRKaDzrTsgids",
-				"scope": "GOOGLE",
-				"types": [
-					"tourist_attraction",
-					"travel_agency",
-					"restaurant",
-					"food",
-					"point_of_interest",
-					"establishment"
-				],
-				"user_ratings_total": 2,
-				"vicinity": "32 The Promenade, Sydney"
+				lat: 44.45531030000001,
+				lng: -93.164917,
+				name: 'Subway',
+				photoRaw: 'CmRaAAAANHU8QT4uJ9ax7JEvO-nGA4eHRSlZPod7n67xF4BVEG-p83W-l2BNwwgCsfSU0ayXNy_QL8Pux_atclk_SvSUCBTk5UunNADp5p61pCsLjPEWtHh1Jf_kJo3F-HfqwspNEhCiosWlLzbT19Y2Ua2cWweNGhRHWrTSN0Nl81m9t8c80jn83Ye4Ew',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipNxEiNqQkPLpjTWWnN4Ai0DwNTtS4Uo8OCD6gtb=s1600-w400',
+				price_level: 1,
+				rating: 3.5,
+				user_ratings_total: 126
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8609391,
-						"lng": 151.2098735
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.85958927010727,
-							"lng": 151.2112233298927
-						},
-						"southwest": {
-							"lat": -33.86228892989272,
-							"lng": 151.2085236701072
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png",
-				"id": "9ea7c77cb181b1f33d19c9d76121fcc6d5246ad8",
-				"name": "Australian Cruise Group",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 1536,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/113088009011192061895\"\u003eKeith Bauman\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAHtujPGyvs7GyrgQxwFFDuMgjYKrw96W2Mn3dmue0-xgcG6XBG8CsU41N5KoJtfXjTN_QBQpSE43ei-MtLAMyCeV66DbaKZ7wOokCLNh6AR4tJr9fyp9LePbRrqoxex7NEhDKpE2ugVXtnTC1mon64J9XGhQB9pIDKD5fMh9GB6RSPv-0bTiMEw",
-						"width": 2048
-					}
-				],
-				"place_id": "ChIJpU8KgUKuEmsRKErVGEaa11w",
-				"plus_code": {
-					"compound_code": "46Q5+JW Sydney, New South Wales",
-					"global_code": "4RRH46Q5+JW"
-				},
-				"rating": 4.4,
-				"reference": "ChIJpU8KgUKuEmsRKErVGEaa11w",
-				"scope": "GOOGLE",
-				"types": [
-					"travel_agency",
-					"restaurant",
-					"food",
-					"point_of_interest",
-					"establishment"
-				],
-				"user_ratings_total": 5,
-				"vicinity": "6 Cirular Quay, Sydney"
+				lat: 44.457776,
+				lng: -93.15952399999999,
+				name: 'Chapati',
+				photoRaw: 'CmRaAAAALJeKWNIQdpXWMzCGKyXvlnuVtyHVmk8XHi3cyT4RQ4HH1h--7eSQ77U_8HbII8w3UVA4cUXoo_g3qQzFfBtqnvlr9lr4z0oCHUMsqc1TGwZGbtYxnM_BmjDOCDkdrqdkEhBVVT71rnLGl0KqcsF4cU42GhS6KnVD1_CzLzI0qFt0FjAEaEJj4A',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipMFH6LXgWh07Cbc-YPpuaktPBUA5302hug-fatN=s1600-w400',
+				price_level: 2,
+				rating: 4.4,
+				user_ratings_total: 195
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8686058,
-						"lng": 151.2018206
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.86732247010728,
-							"lng": 151.2033693798927
-						},
-						"southwest": {
-							"lat": -33.87002212989272,
-							"lng": 151.2006697201072
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png",
-				"id": "21a0b251c9b8392186142c798263e289fe45b4aa",
-				"name": "Rhythmboat Cruises",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 2269,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/104066891898402903288\"\u003eRhythmboat Sydney Harbour Cruises\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAEeho_iNWeKrbCkLb1mOcSF32DwpL79EOJF8Qkf2T86lq3q36XyrQob2PjcpUZ2BznZIpC_Zvrjf2MK3ojpdBb3AzYRABYfXW_ew_X5ipy_FuGAkjLS4CJeM30-z14KPDEhC0ai2M66BL_HEou66LBoWkGhTUA7WE2mUCPpfGzod1dCrsJv3prQ",
-						"width": 4032
-					}
-				],
-				"place_id": "ChIJyWEHuEmuEmsRm9hTkapTCrk",
-				"plus_code": {
-					"compound_code": "46J2+HP Sydney, New South Wales",
-					"global_code": "4RRH46J2+HP"
-				},
-				"rating": 4,
-				"reference": "ChIJyWEHuEmuEmsRm9hTkapTCrk",
-				"scope": "GOOGLE",
-				"types": [
-					"travel_agency",
-					"restaurant",
-					"food",
-					"point_of_interest",
-					"establishment"
-				],
-				"user_ratings_total": 27,
-				"vicinity": "King Street Wharf, King St, Sydney"
+				lat: 44.4381399,
+				lng: -93.1827122,
+				name: "Papa Murphy's Take 'N' Bake Pizza",
+				photoRaw: 'CmRaAAAAZYgSG-VHhGl0VTCy_SzzUJcDBeKHEqdS5PDQTI6DwZmF2Wt1cSrxGRZhKfw7Vmip3vM-oUFmWxqalyocenWNllWjJEUpigM46EbfdUobzGdkg7aHy31YbLtbUYzZfoT0EhDmrpTvhSxQVMjEozZ3yHf-GhSRINpbXgG6WR_XEPLDbM-avgLyBQ',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPuVBQdh3FjJEBPzV3omvN3veZRMPH-W6DkqN90=s1600-w400',
+				price_level: 1,
+				rating: 3.7,
+				user_ratings_total: 70
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.858502,
-						"lng": 151.2099044
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.85714302010729,
-							"lng": 151.2111814798927
-						},
-						"southwest": {
-							"lat": -33.85984267989273,
-							"lng": 151.2084818201073
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
-				"id": "6facf611e56f3d6f232a24e60d9392759bbd43fa",
-				"name": "Junk Lounge",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 608,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/104473997089847488714\"\u003eA Google User\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAm2biJi_vn8BCrtN5x3bYWe95qwOD2Bwy8axQyTaMibtw7q-hnxdofdp3gWhaMyShw26mMzr-Y6K5TfwOnD717cTeUS6qJRKZ3x4Sytk8Ph6Zbaq0XbcrI4SZWFToMfh4EhCgoK-xMDYKTxiDvUv2ppeeGhRLq-E80J-wrQ8MfNoqnH-NfJOyfQ",
-						"width": 1080
-					}
-				],
-				"place_id": "ChIJq9W3HZOvEmsRYtKNTRmq34M",
-				"plus_code": {
-					"compound_code": "46R5+HX The Rocks, New South Wales",
-					"global_code": "4RRH46R5+HX"
-				},
-				"price_level": 2,
-				"rating": 4.1,
-				"reference": "ChIJq9W3HZOvEmsRYtKNTRmq34M",
-				"scope": "GOOGLE",
-				"types": ["restaurant", "food", "point_of_interest", "establishment"],
-				"user_ratings_total": 36,
-				"vicinity": "Level 2, Overseas Passenger Terminal, Circular Quay W, The Rocks"
+				lat: 44.4569954,
+				lng: -93.1614555,
+				name: 'Froggy Bottoms River Pub & Lily PADio',
+				photoRaw: 'CmRaAAAA0LQ49HDZXUMoM2GzhjrdwlEqDLTTlNm3CoC_vQhMMUhVKwT-ZIzyw9v1vHtN6Ici8t1thN6fVw0FaDPx9z25xpZAZZCPvBCCYFpGt4quDsPG7RPz8RBS1xKqbJ1N8flSEhBMFoF0tmMeNSzmwdQ2pmYlGhRiZCTyHWk1ssbxTKh_2BnxqQl_hA',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPDP4MuKzvBY-1c3LRLKEMRM4A8uNCqme0USEtg=s1600-w400',
+				price_level: 1,
+				rating: 4.4,
+				user_ratings_total: 455
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8675885,
-						"lng": 151.2015896
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.86618797010728,
-							"lng": 151.2029996798927
-						},
-						"southwest": {
-							"lat": -33.86888762989273,
-							"lng": 151.2003000201072
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png",
-				"id": "dec25eec746943ffbc96e3719623dbbb12d4d2a2",
-				"name": "Magistic Cruises",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 3456,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/111624752247196095718\"\u003eNieves Casais\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAHuztyBnc-lORyE7PLj10VuzjD2HMEVPwTaqHfty1MfvPSXFRUtGX-8ep3xE5oeQbG6MBodx1nKu2OW0CYO-8kpIrOjzLg5ylfaeH9XhSp7xOrfuY6hFvX5505vM6wp7JEhBbntW3Ys26s_s-t3qjjBsvGhREFzX7pFibIB_EBm3577aTRmeh6A",
-						"width": 4608
-					}
-				],
-				"place_id": "ChIJxRjqYTiuEmsRGebAA_chDLE",
-				"plus_code": {
-					"compound_code": "46J2+XJ Sydney, New South Wales",
-					"global_code": "4RRH46J2+XJ"
-				},
-				"rating": 4,
-				"reference": "ChIJxRjqYTiuEmsRGebAA_chDLE",
-				"scope": "GOOGLE",
-				"types": [
-					"tourist_attraction",
-					"travel_agency",
-					"restaurant",
-					"food",
-					"point_of_interest",
-					"establishment"
-				],
-				"user_ratings_total": 81,
-				"vicinity": "King Street Wharf, 32 The Promenade, Sydney"
+				lat: 44.44533500000001,
+				lng: -93.176312,
+				name: 'Tokyo Grill',
+				photoRaw: 'CmRaAAAA63Ut7wD-jYe1PqEfXq_eSa0rLC-OR-Bha7ynNjQ-__FH6JASRfNvpYpk6Ii4WtsAL9JFwV0tHhC0LBHPwx7O4ZNmEHTBCOzvEcEQY5CxArV-Z103vmLfZL1b-1RWBOsXEhC0aiaq7kBKXY9Jj5MvCm4ZGhT2MGtU17vdXZj2To8nRllDFPk8fg',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipOEQtXJ69QBTXmJfFrcUA-7Zcw5u5_IPKhcFLRV=s1600-w400',
+				price_level: 2,
+				rating: 4.6,
+				user_ratings_total: 492
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8694519,
-						"lng": 151.2026054
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.86810207010728,
-							"lng": 151.2039552298927
-						},
-						"southwest": {
-							"lat": -33.87080172989273,
-							"lng": 151.2012555701073
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
-				"id": "a6e1f64a92b2529d751449641d8fb2c8b9d7e056",
-				"name": "Cockle Bay Wharf",
-				"opening_hours": {
-					"open_now": true
-				},
-				"photos": [
-					{
-						"height": 3024,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/114506261366431391535\"\u003eJohn Chan\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAA4t5tJbi96_37pEN9ItNUH8Kae-47NeQisiNjM_8Lmcb70-lHm7NPd2W-xTpoMj1S3yXBercMnAFdKnAV1n7nLGjriI-eEEwLfRNx_5cCnAp0DC4nCeoh-0tE-i4SjoqmEhDWBHO3_WIGfIji2-BtSelCGhTIuWznMRH2wC7dS2qLssbByNq7GA",
-						"width": 4032
-					}
-				],
-				"place_id": "ChIJvwSIiTiuEmsRhszQoBc2SY8",
-				"plus_code": {
-					"compound_code": "46J3+62 Sydney, New South Wales",
-					"global_code": "4RRH46J3+62"
-				},
-				"rating": 4.4,
-				"reference": "ChIJvwSIiTiuEmsRhszQoBc2SY8",
-				"scope": "GOOGLE",
-				"types": ["restaurant", "food", "point_of_interest", "establishment"],
-				"user_ratings_total": 1065,
-				"vicinity": "201 Sussex St, Sydney"
+				lat: 44.4560941,
+				lng: -93.1595282,
+				name: "Domino's Pizza",
+				photoRaw: 'CmRaAAAAi9E97DpSLJEJaJYIrbNMJELTpTYGZF_cfDujPSyVQZ_PnsXiZtOacmVe1yjqVwCuJ2FbKfxxoW0Pmf1pT-0k1J9Lmm2mVfvoQRZpPrdgVYDIrIna0XMtNJoFP1lMvYZVEhBdETeAbR0_Ioxg9njipifVGhSFDjPEZNLW_lr2cw18G9LCaiZyfA',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipN4mZE2zNgNGg1tvbK_zi2bH9L5TLO431x-1Ot3=s1600-w400',
+				price_level: 1,
+				rating: 4.1,
+				user_ratings_total: 119
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8582724,
-						"lng": 151.2100117
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.85690727010728,
-							"lng": 151.2112615298927
-						},
-						"southwest": {
-							"lat": -33.85960692989272,
-							"lng": 151.2085618701073
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
-				"id": "968577d1adec336585598220ccaba8e05f3b9b54",
-				"name": "Yuki's at the Quay",
-				"opening_hours": {
-					"open_now": false
-				},
-				"photos": [
-					{
-						"height": 3464,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/106981743284611658289\"\u003eMarc MERLIN\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAf-uhZs0cSYNHJXGg8Am_MfF3_RP4a_68x8tjM32EOyKHE1ea56z1qPseKjRFLF1Uo5dilvtqHoD4bNbmuBdLWgWb-UJ97MJjGsmIbZQbLLUG1P4w6mkC3Ph_vFZe943fEhDnwTUjyLUVgjPodZVhU3slGhT3sn_FJ7xBZfffl7qWslu8sU20WQ",
-						"width": 4618
-					}
-				],
-				"place_id": "ChIJkUcHV12uEmsRdEyuYJC4zDk",
-				"plus_code": {
-					"compound_code": "46R6+M2 The Rocks, New South Wales",
-					"global_code": "4RRH46R6+M2"
-				},
-				"price_level": 2,
-				"rating": 4,
-				"reference": "ChIJkUcHV12uEmsRdEyuYJC4zDk",
-				"scope": "GOOGLE",
-				"types": ["restaurant", "food", "point_of_interest", "establishment"],
-				"user_ratings_total": 109,
-				"vicinity": "Level 4 Overseas Passenger Terminal, The Rocks"
+				lat: 44.455499,
+				lng: -93.15990699999999,
+				name: 'The HideAway Coffeehouse and Wine Bar',
+				photoRaw: 'CmRaAAAAz1OhufCTMMcYO4Ne88RPJM6yeTS3VIY6bwVTzJjouqSlCuWaHMgu0TBMluB4xNEnRkhdnvRGhdeV25DhswaepCiwy9mRSdXHTbWLQYTQWztXz8hjq_DTsgYMkWZuVYxWEhDJh2EQiX9HS2A80yGy4xCLGhRqWuzvmZ60tJHD1jlVdy1HatZDWw',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipN8mzbf7GsYJeQslKKCxaWW8Ys20JlkYn7TUxHW=s1600-w400',
+				price_level: 2,
+				rating: 4.6,
+				user_ratings_total: 228
 			},
 			{
-				"business_status": "OPERATIONAL",
-				"geometry": {
-					"location": {
-						"lat": -33.8622576,
-						"lng": 151.2128469
-					},
-					"viewport": {
-						"northeast": {
-							"lat": -33.86091222010727,
-							"lng": 151.2142697798927
-						},
-						"southwest": {
-							"lat": -33.86361187989272,
-							"lng": 151.2115701201072
-						}
-					}
-				},
-				"icon": "https://maps.gstatic.com/mapfiles/place_api/icons/lodging-71.png",
-				"id": "5f0778e471ae3ade36ec86977ae7ab8e63357a14",
-				"name": "Sir Stamford at Circular Quay",
-				"photos": [
-					{
-						"height": 1748,
-						"html_attributions": [
-							"\u003ca href=\"https://maps.google.com/maps/contrib/101513927641784981366\"\u003eA Google User\u003c/a\u003e"
-						],
-						"photo_reference": "CmRaAAAAZndHWWann1eGTqjGlalaisMXHgI67aje5VVfJHFBvrclmOxf8S12tIO0eenAiunUwmwyp4Afhs5OpMzAETxgWE5H80tOc8fNt_WDsiPiAX6FFkHjvpe7PZdahW9-M488EhCx4FG_wJCCfozi5Z7AnrgfGhQFpPhhdu7czkuUW6vzk10Z7xXVpQ",
-						"width": 1748
-					}
-				],
-				"place_id": "ChIJ2X1PrGmuEmsRrgRKqd4bb9I",
-				"plus_code": {
-					"compound_code": "46Q7+34 Sydney, New South Wales",
-					"global_code": "4RRH46Q7+34"
-				},
-				"rating": 4.4,
-				"reference": "ChIJ2X1PrGmuEmsRrgRKqd4bb9I",
-				"scope": "GOOGLE",
-				"types": [
-					"lodging",
-					"bar",
-					"restaurant",
-					"food",
-					"point_of_interest",
-					"establishment"
-				],
-				"user_ratings_total": 843,
-				"vicinity": "93 Macquarie St, Sydney"
+				lat: 44.4603668,
+				lng: -93.175338,
+				name: 'Ole Store Restaurant',
+				photoRaw: 'CmRaAAAAsi-A7sr_cE9tp3-QLF_VQM2x9owf3be2k8IB7aIMP0OGqNeN9epRn9iiuREgFiE-NZwWlLcSUQVDM0QRVxB7nB0ru3Guib8d4KZ_gW0x-rbtZkkCv7Qb3_ZN5-6TN6MqEhD47ENynH9p5KVKNXuWuD1OGhRams-IveTKivTgEMZXiDGOBez80Q',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPVkiyGbZ86St85nmQpx5Zvs4ExjPVoAAPOYEXq=s1600-w400',
+				price_level: 2,
+				rating: 4.5,
+				user_ratings_total: 465
+			},
+			{
+				lat: 44.4543554,
+				lng: -93.1603627,
+				name: 'VFW Post 4393 (Veterans of Foreign Wars)',
+				photoRaw: 'CmRaAAAAofHER3Xzz7dsWfI7T67pW5huKLzEQm8AyZ09btNm60_bAmBEqiMccCOS9edbo2HoxbGk-FYnj01xi0XfLL918GqniFXONZ4eKQfcyt_VFwqUlqnJ09sWMR0QwCnIcTtuEhDOHTEW3NOrJ7pJ3q9xJUnKGhR2vDEGfPXktLmUzNLJJ9qlhLzE5Q',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPDBrn3_v8LbnlGaw1GONEvBlCuHh86kbozmKgB=s1600-w400',
+				price_level: undefined,
+				rating: 4.5,
+				user_ratings_total: 77
+			},
+			{
+				lat: 44.4539227,
+				lng: -93.1623285,
+				name: "Carbone's Pizzeria",
+				photoRaw: 'CmRaAAAA5ldcSnXXm8EkHApcEV7Sk3p0UOJbY9m_j4kQifV0WbDVzVsb8J8Hr7A0_RVALkxyyOu_FyUy6l30Uw-ZrhQMGki--D1kH5cV7xACWJiIF0Hs12X3lVTwYEMlOfKx1kvHEhD5y9svo-r_m3owCi0bX65oGhTTsm91g2X24Pl5G1G0VXikLLqiLw',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipOomD7M1uOsbOH6oYlMBOZgOwyEA1uZBGCS8_Hr=s1600-w400',
+				price_level: undefined,
+				rating: 4,
+				user_ratings_total: 213
+			},
+			{
+				lat: 44.4618757,
+				lng: -93.1827923,
+				name: "The Lion's Pause",
+				photoRaw: 'CmRaAAAAUJhk7Yj2XgcBqc1XHe09taGj3M9z26mVWSWsc_YIFaXaVgNkWW1_ppq7KkpVb7dQYDpfSLDhy6eNUptxKZvI4OrMFxlQVdF47y1nTLbA6QxZAI71FcaThWcr2Iq0QNX_EhC8o39xUPPGGJE8efWQnGYJGhQ5rvaJJ4Q-bJxmruIDMR7aST1-uQ',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPJNokeVH2bPmePgYK66ls9qAPdyYt_G8_oFO3I=s1600-w400',
+				price_level: 1,
+				rating: 4.4,
+				user_ratings_total: 30
+			},
+			{
+				lat: 44.4377785,
+				lng: -93.1832733,
+				name: 'Gran Plaza Northfield',
+				photoRaw: 'CmRaAAAAxshNrXo5SQlWKddpliHurTqtE5L_WmAc3gQuPVMGnFIAIw6bNXQTD9v1K2b9ZK6VZh2T46p0405DKMe4GIbO-FZMd24uL9VCQdSXSwdc6w3rBLigih5QD50rAiAzHVVZEhDWzenP73klUqitpQq6nGeEGhS8tp_K9HscTKB2FSLgpcF_Av_pjQ',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPDEtBZsU59y69-v5cZ-zPKtCGIPUmPcmobpNrQ=s1600-w400',
+				price_level: 2,
+				rating: 4.5,
+				user_ratings_total: 260
+			},
+			{
+				lat: 44.4349767,
+				lng: -93.1888659,
+				name: 'Fielders Choice Tap & Table',
+				photoRaw: 'CmRaAAAAHggtEZolkmdN4bQeovgFs7j45kDqn489cIx9TH1gff0nS89YqJyWEg27b6G46rTaU-ICMuwWJ737y_CIM0yN2HPfgfoG7u6di9nqYn_AMz55xFM-khwJJ-tk17aIOErzEhAiPMzNEW1W4jb4GUVDILIGGhRSFVZ1-wR2C6DvLBUpZasuBjNn9w',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipOIMwYR-HGoZ4dmFfUaWAa409H3cNE8XmNquo4Y=s1600-w400',
+				price_level: 2,
+				rating: 4.3,
+				user_ratings_total: 518
+			},
+			{
+				lat: 44.4323001,
+				lng: -93.1892967,
+				name: "Applebee's Grill + Bar",
+				photoRaw: 'CmRaAAAA9lmFBgQh9Lg3cHwUTd7Og68Qh2yxwXOf5Y7zkP2mghzS30mC-B_gLi8yD33XGZFD74xu7UTOSWMQAezk6CgxEWoZUlMY6Wlf0lAXjMK5hhRn7ILmLoeTKzLX2FJ-q9q6EhBPGko_mZCY7Hnz0mBmUggJGhQSCFrXBOvjOPPTHJQ7ahfNrEnnOQ',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipP4AK9q89OwY_aOspXi3YqksVeepROYTDKB5Byh=s1600-w400',
+				price_level: 2,
+				rating: 3.9,
+				user_ratings_total: 445
+			},
+			{
+				lat: 44.4563736,
+				lng: -93.1594659,
+				name: 'Mandarin Garden Restaurant',
+				photoRaw: 'CmRaAAAA0G-Y1cbrLv7LJY3JDdLRcHTmLdvQW-iotj8ITAUF5h5-VMyW56OLs2H_fraJdHw9gwnTYTltRrXq_6OIIyufJ9ZGsxZmvz74NJ_stkVzmXG5vvJPlxUkd3xeSV1z6iQ1EhA_vCoV3G4VjgozA2qyAz1NGhSPape1MzADWVOjAblhxEVOHuphKQ',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipMAmFyo8mlBnzH8U8L9bQORLykUCO-IbNLtzmVm=s1600-w400',
+				price_level: 2,
+				rating: 4,
+				user_ratings_total: 81
+			},
+			{
+				lat: 44.4305403,
+				lng: -93.2070545,
+				name: 'L & M Bar & Grill & Patio',
+				photoRaw: 'CmRaAAAAGaEFLv-JAXyXe1lD28NTWp-sEwgTE5sYFcBG0FRF1-Tz5wvUacHR0v68Ik5qkfQ16CoKrIpXlIYPH8vn0sNm8O4BDqg-UAC3_e_JJkQwOxfjfgH13AeNNlUUwKgxnh0MEhDEh_y-Jpa57y8SelRaNAyZGhSnA9xZnAtpSVkoTWGP1e3qXGbh6Q',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPVG4RfGXn7toDgIHFNGV1QWu8-3eNjhF7Bwksa=s1600-w400',
+				price_level: 1,
+				rating: 4.6,
+				user_ratings_total: 240
+			},
+			{
+				lat: 44.449216,
+				lng: -93.1717886,
+				name: 'El Tequila Mexican Restaurant',
+				photoRaw: 'CmRaAAAASZjf051AFwpGqC3sGQMPH4DXLm2JXVoM9EtZQHATaQIO5ZDoe4H1eHE8DdGMaJCOoXlAI4SuqbSTowZyxUAKZUh2Kk13QTIhWcxsYva5RDUVJmTsFNU7swgXlJSDBweGEhBcIE7K9ylTtow_4YDelNXcGhRwhkUj2JDTZ4NNfJg633uX45IKgw',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipN2eM8xFWgYsNTqiqojI_JjHmKeswJPkRcBwsdh=s1600-w400',
+				price_level: 2,
+				rating: 4.4,
+				user_ratings_total: 289
+			},
+			{
+				lat: 44.44769899999999,
+				lng: -93.173476,
+				name: "George's Vineyard",
+				photoRaw: 'CmRaAAAAmoJ3_Ltzw0ly1NSS1Qs49Y7Ahd3cAXThWDPEaREfHnsGaOOHfosm7UND7Gq1FkP4xxs2xmGX7uPRSwGXkcCa6BHIrUCXriwG_aU3CebItf5gwoFvDW2KVLEuDIbJ2bd8EhB_ayw7tb2BrOonx_w4yYM5GhRzaKaF4z1va3zcewyqmrPwss4eOg',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipPtI3ISPouKk6pFld1nzEnnXGHC6vlVed2zVh-p=s1600-w400',
+				price_level: 2,
+				rating: 4.5,
+				user_ratings_total: 359
+			},
+			{
+				lat: 44.455642,
+				lng: -93.16002999999999,
+				name: 'Hogan Brothers',
+				photoRaw: 'CmRaAAAANP9F3w7NHG7EQPYaBu1IaoDW2tY5_ykywLMYAIqiWwB483_89dlROPwGRU2Xhfy6GQp5PvWUyjn5hX7hiz37eFalDOyQmoW8ephvTjNBumjQsRgtf9OGihPU8LswHQ2EEhBKIUQBp3KXY7MIH2E7LPxwGhSCKyGpzopJMfU_hOkm4l6rZNYOpA',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipMJ3eMixorAmhSYg-tmCSufNCV1ZPlEaAQRKC6T=s1600-w400',
+				price_level: 1,
+				rating: 4.6,
+				user_ratings_total: 700
+			},
+			{
+				lat: 44.4502163,
+				lng: -93.1709061,
+				name: "Culver's",
+				photoRaw: 'CmRaAAAA-ZJ1Du4ij3W7BP-jft34BkRoxnhwmgmc_RgRA1RLrsrFYUuYSYNhzt2duIVtqfmPKvUm6TilLNbIIWPPJM8_ILfEbNaehM9QVzjau_xnNtc_Zr4bieZuUfN3c2ei_lwlEhDNMXriwZJvCyErKKgv-TIQGhTahbPYjUVHu2Ldg6xkkqYdFRitTw',
+				photo: 'https://lh3.googleusercontent.com/p/AF1QipM-eq400CYpcLM4s3KnUMKVQZCT6rK9PPqF7Ld4=s1600-w400',
+				price_level: 1,
+				rating: 4.4,
+				user_ratings_total: 673
 			}
-		],
-		"status": "OK"
-	};
+		]
+	}
 	return ret;
 }
