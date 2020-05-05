@@ -2,6 +2,7 @@ var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var fetch = require("node-fetch");
+var request = require('request');
 
 //sessions expire after this amount of time (1 hour in milliseconds)
 const MAX_TIME = 3600000;
@@ -33,7 +34,7 @@ var rooms = {};
 /*TYPES OF EVENTS THE SERVER EXPECTS:
 	create: sent when someone creates a room, sends them the room id to tell their friends (if successful)
 	join: sent when someone tries to join a room, sends them how many others are in the room, as well as the API results (if successful)
-	start: someone tried to start the room, sends back an acknowledgement that they may begin swiping 
+	start: someone tried to start the room, sends back an acknowledgement that they may begin swiping
 */
 
 io.on('connection', (socket) => {
@@ -70,7 +71,7 @@ io.on('connection', (socket) => {
 		}, MAX_TIME);
 
 		//SEARCH for the API call
-		getResults(id,socket); //emits 'results' with API results back to room creator
+		getResults(id,socket, 'restaurant', '44.4583', '-93.1616', '5000'); //emits 'results' with API results back to room creator
 		//TODO: tell the creator when the room is ready to be joined??? Or just hold off on giving them the "room created" event. Because now if someone enters the room id SUPER fast, the server will send the API call results before they're ready, so the client will receive "null"
 	});
 
@@ -155,24 +156,61 @@ function leaveRoom(socket) {
 	//console.log(rooms);
 }
 
-//makes an api call, sends result (whenever it gets it) to room and keeps track of it
-async function getResults(id,socket) {
-	let ret = await getLocations('restaurant', '44.4583', '-93.1616', '5000');
-	socket.emit('results', ret);//send creator the results
-	rooms[id].results = ret;//remember it on the server
+//get results
+function getResults(id, socket, type, lat, lon, radius) {
+	//create our api call
+	var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + lon + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
+	fetch(reqURL)
+	.then(res => res.json())
+	.then(json => {
+		//api call return json, then cleans it
+		let ret = clean(json);
+
+		//io.to(id).emit('results', ret);//send creator the results
+		rooms[id].results = ret;//remember it on the server
+
+		//parse through our results to get all the photos
+		let i = 0;
+		while(rooms[id].results.results[i]) {
+			getPhoto(id, i);
+			i++;
+		}
+
+	});
 }
 
-//use Google Maps API (or whatever cheaper option we go with) to get the things
-async function getLocations(type, lat, long, radius) {
-    var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + long + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
-	let apiRet = await makeApiCall(reqURL);
-	return clean(apiRet);
+//Gets the photo urls for every photo by following the api redirect
+function getPhoto(id, index) {
+	//creates our api call url
+	let getUrl = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=' + rooms[id].results.results[index].photoRaw + '&key=' + apiKey;
+
+	//requests the api call
+	let r = request.get(getUrl, function (err, res, body) {
+		//callback function -- update results once we have them
+		rooms[id].results.results[index].photo = r.uri.href;
+
+		//console.log(rooms[id].results.results[index].photo);
+
+		//checks to see if all photos have loaded: if they have, then we send the results
+		if(checkPhotos(rooms[id].results)){
+			io.to(id).emit('results', rooms[id].results);//send creator the results
+			//console.log(rooms[id].results);
+		}
+	});
 }
 
-const sleep = (sec) => {
-	return new Promise(resolve => setTimeout(resolve, sec * 1000));
+//checks to see if all of the photos have loaded in
+function checkPhotos(ret) {
+	let i = 0; //parse through all values from the photos
+	while(ret.results[i]) {
+		if (ret.results[i].photo == null) return false; //return false if not all have been updated
+		i++;
+	}
+	//return true if we get through the array without finding a missing photo
+	return true;
 }
 
+//Clean the api results to just what we need
 function clean(places) {
   //create our return
   var ret = {results : []};
@@ -188,6 +226,7 @@ function clean(places) {
       lng: cur.geometry.location.lng, //longitude
       name: cur.name, //place name
       photoRaw: cur.photos[0].photo_reference, //the raw photo reference for the api call
+			photo: null, //retrieve this later
       price_level: cur.price_level, //price Level
       rating: cur.rating, //User ratings
       user_ratings_total: cur.user_ratings_total //how many ratings
@@ -195,20 +234,11 @@ function clean(places) {
 
     //Push cleaned values to returned array
     ret.results.push(temp);
-    i++; //inrement to the next value
+    i++; //increment to the next value
   }
 
   //return our cleaned array
   return ret;
-}
-
-//performs a google places api call
-function makeApiCall(reqURL) {
-    fetch(reqURL)
-    .then(res => res.json())
-    .then(json => {
-      return json;
-    });
 }
 
 //for now, just return this object from Myles' API call
