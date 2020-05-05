@@ -196,7 +196,6 @@ function makeApiCall(reqURL) {
     .then(res => res.json())
     .then(json => {
       return json;
-      }
     });
 }
 
