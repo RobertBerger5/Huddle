@@ -40,6 +40,9 @@
 		socket.on('message', (msg) => {
 			log(msg);
 		});
+		socket.on('user_err',(msg)=>{
+			console.log("ERROR: "+msg);
+		})
 
 		socket.on('results', (results) => {
 			search_results=results;

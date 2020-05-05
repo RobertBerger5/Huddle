@@ -20,6 +20,17 @@ app.get('/', (req, res) => {
 */
 var rooms = {};
 
+/*TYPES OF EVENTS SENT BY THE SERVER:
+	user_err: lets the user know they did something wrong and it didn't go through
+	message: gives the user some info on what happened on the server
+
+*/
+/*TYPES OF EVENTS THE SERVER EXPECTS:
+	create: sent when someone creates a room, sends them the room id to tell their friends (if successful)
+	join: sent when someone tries to join a room, sends them how many others are in the room, as well as the API results (if successful)
+	start: someone tried to start the room, sends back an acknowledgement that they may begin swiping 
+*/
+
 io.on('connection', (socket) => {
 	console.log('user connected');
 	//start without a room by default. Also, users are only ever in one room at a time
@@ -28,7 +39,7 @@ io.on('connection', (socket) => {
 	//request to create a room
 	socket.on('create', (type) => {
 		if (socket.mainRoom != null) {
-			socket.emit('error', 'Cannot join another room');
+			socket.emit('user_err', 'Cannot join another room');
 			console.log("(someone tried to create a room while already in one)");
 			return;
 		}
@@ -55,12 +66,13 @@ io.on('connection', (socket) => {
 
 		//SEARCH for the API call
 		getResults(id,socket); //emits 'results' with API results back to room creator
+		//TODO: tell the creator when the room is ready to be joined??? Or just hold off on giving them the "room created" event. Because now if someone enters the room id SUPER fast, the server will send the API call results before they're ready, so the client will receive "null"
 	});
 
 	//request to join a room
 	socket.on('join', (id) => {
 		if (socket.mainRoom != null) {
-			socket.emit('error', 'Cannot join another room');
+			socket.emit('user_err', 'Cannot join another room');
 			console.log("(someone tried to join a room while already in one)");
 			return;
 		}
@@ -76,14 +88,14 @@ io.on('connection', (socket) => {
 			//send them the results to load in
 			socket.emit('results', rooms[id].results);
 		} else {
-			socket.emit('error', 'Room "' + id + '" not found');
+			socket.emit('user_err', 'Room "' + id + '" not found');
 			console.log("(someone tried to join a room that doesn't exist)");
 		}
 	});
 
 	socket.on('start', () => {
 		if(socket.mainRoom==null){
-			socket.emit('error','Need to be in a room to start session');
+			socket.emit('user_err','Need to be in a room to start session');
 			console.log("(someone tried to start while not in a session)");
 			return;
 		}
@@ -118,7 +130,7 @@ http.listen(3000, () => {
 function leaveRoom(socket) {
 	let id = socket.mainRoom;
 	if (id == null) {
-		socket.emit('error', 'No room to leave');
+		socket.emit('user_err', 'No room to leave');
 		console.log("(someone tried to leave without being in a room)");
 		return;
 	}
