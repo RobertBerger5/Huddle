@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+
+<head>
+	<title>server tester</title>
+</head>
+
+<body>
+	<p>Create room of type:<input type="text" onchange="createRoom(this.value);this.value='';"
+			placeholder="restaurant" /></p>
+	<p>Or, join id:<input type="text" onchange="joinRoom(this.value);this.value='';" /></p>
+	<br />
+	<button onclick="leaveRoom()">Leave</button>
+	<br />
+	<button onclick="start()">Start</button>
+	<ul id="results"></ul>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+	<script>
+		let search_results=null;
+
+		var socket = io();
+
+		function createRoom(type) {
+			socket.emit('create', type);
+		}
+		function joinRoom(id) {
+			socket.emit('join', id);
+		}
+		function leaveRoom() {
+			socket.emit('leave');
+		}
+		function start() {
+			socket.emit('start');
+		}
+		function swipe(locI, swipe) {
+			socket.emit('swipe', locI, swipe);
+		}
+
+		socket.on('message', (msg) => {
+			log(msg);
+		});
+
+		socket.on('results', (results) => {
+			search_results=results;
+		});
+
+		socket.on('started', ()=>{
+			console.log(search_results);
+			for (let i = 0; i < search_results.results.length; i++) {
+				let loc = search_results.results[i];
+				$('#results').append('\
+				<li class="result">'+ loc.name + '</li>\
+				<button onclick="swipe('+ i + ',\'left\')">Left</button>\
+				<button onclick="swipe('+ i + ',\'right\')">Right</button>\
+				');
+			}
+		});
+
+
+
+
+		function log(msg) {
+			$('body').append($('<p>').text(msg));
+		}
+	</script>
+</body>
+
+</html>
