@@ -26,14 +26,28 @@ app.get('/', (req, res) => {
 var rooms = {};
 
 /*TYPES OF EVENTS SENT BY THE SERVER:
-	user_err: lets the user know they did something wrong and it didn't go through
+	user_err: lets the user know they did something wrong and nothing happened on the server
 	message: gives the user some info on what happened on the server
-
+	created: creation successful, sends room id
+	join_ack: successfully joined room (no string sent with it)
+	other_joined: notification that someone joined (including the person themselves), sends number of people in room now
+	leave_ack: all clear, user has left succesfully (no string sent with it)
+	other_left: notification that someone else left, sends number of people in room now
+	started: all clear, begin swiping (no string sent with it)
+	ended: an hour has passed and the room has closed, everyone leave (no string sent with it)
+	results: results from API call, sent ASAP on create or join
+	swipe_ack: swipe successful, take that restaurant out of the pile
+	vote_update: TBD, depending on if we want the "top results" to be calculated server-side or client-side
 */
+
 /*TYPES OF EVENTS THE SERVER EXPECTS:
-	create: sent when someone creates a room, sends them the room id to tell their friends (if successful)
-	join: sent when someone tries to join a room, sends them how many others are in the room, as well as the API results (if successful)
-	start: someone tried to start the room, sends back an acknowledgement that they may begin swiping 
+	create: user creates a room, sends them the room id to tell their friends (if successful)
+	join: user joins a room, sends them how many others are in the room, as well as the API results (if successful)
+	start: user starts the room, sends back an acknowledgement that they may begin swiping (if successful)
+	leave: user leaves the room, sends back acknowledgement to that user that they left the room, and a notice to other users that someone left (if successful)
+	swipe: user has swiped, doesn't send anything back at the moment
+
+	disconnect: user has disconnected, socket.io sends this automatically
 */
 
 io.on('connection', (socket) => {
@@ -62,11 +76,15 @@ io.on('connection', (socket) => {
 		socket.mainRoom = id; //so we know which room they belong to
 		//initialize the room
 		rooms[id] = { people: 1, type: type, status: "created", results: null };
-		socket.emit('message', type + " room created with id: " + id);
+		socket.emit('created',id);
 		console.log("room created with id: " + id);
 
 		setTimeout(() => {
-			console.log("TODO: kick em all out of " + id);
+			if(id in rooms){
+				io.to(id).emit('ended');
+				io.sockets.in(id).leave(id); //TODO: check if that's right
+			}
+			console.log("time limit exceeded for room " + id+ ", everyone booted");
 		}, MAX_TIME);
 
 		//SEARCH for the API call
@@ -86,8 +104,8 @@ io.on('connection', (socket) => {
 			socket.join(id);//subscribe to socket.io room
 			socket.mainRoom = id;//so we know which room they belong to
 			rooms[id].people++;//one more person in
-			socket.to(id).emit('message', 'user joined. ' + (rooms[id].people) + ' users here.');//send to everyone but new user
-			socket.emit('message', 'joined room: ' + id + '. There are ' + (rooms[id].people - 1) + ' others here.');//send only to new user
+			socket.emit('join_ack');//send only to new user
+			io.to(id).emit('other_joined',rooms[id].people);//send to all, including new user
 			console.log("user joined room " + id);
 
 			//send them the results to load in
@@ -123,6 +141,8 @@ io.on('connection', (socket) => {
 		//very minimal at the moment, doesn't even check if they're in a room and that the room has searched / has results
 		let id = socket.mainRoom;
 		console.log("user voted " + swipe + " for " + rooms[id].results.results[locI].name);
+		socket.emit('swipe_ack',locI);
+		io.to(id).emit('vote_update',swipe,locI);
 	});
 });
 
@@ -148,10 +168,10 @@ function leaveRoom(socket) {
 		console.log("deleting room " + id);
 	} else {
 		//room not empty, notify people of person leaving
-		socket.to(id).emit('message', 'user left, room down to ' + rooms[id].people + ' people');
+		socket.to(id).emit('other_left', rooms[id].people);
 		console.log("user left room " + id);
 	}
-	socket.emit('message', 'left room');
+	socket.emit('leave_ack');
 	//console.log(rooms);
 }
 
@@ -164,8 +184,9 @@ async function getResults(id,socket) {
 
 //use Google Maps API (or whatever cheaper option we go with) to get the things
 async function getLocations(type, lat, long, radius) {
-    var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + long + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
-	let apiRet = await makeApiCall(reqURL);
+	var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + long + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
+	let apiRet=makeDummyCall();
+	//let apiRet = await makeApiCall(reqURL);
 	return clean(apiRet);
 }
 

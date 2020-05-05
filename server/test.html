@@ -37,17 +37,27 @@
 			socket.emit('swipe', locI, swipe);
 		}
 
-		socket.on('message', (msg) => {
-			log(msg);
-		});
 		socket.on('user_err',(msg)=>{
-			console.log("ERROR: "+msg);
-		})
-
-		socket.on('results', (results) => {
-			search_results=results;
+			log(msg,"red");
 		});
-
+		socket.on('message', (msg) => {
+			log(msg,"black");
+		});
+		socket.on('created',(id)=>{
+			log('created room '+id,"#0a0");
+		});
+		socket.on('join_ack', () => {
+			log('joined','#00f');
+		});
+		socket.on('other_joined',(n)=>{
+			log('someone joined, '+n+' people in room now',"#aaf");
+		});
+		socket.on('leave_ack',()=>{
+			log('left room',"#00f");
+		});
+		socket.on('other_left',(n)=>{
+			log('someone left, '+n+' people in room now',"#aaf");
+		});
 		socket.on('started', ()=>{
 			console.log(search_results);
 			for (let i = 0; i < search_results.results.length; i++) {
@@ -58,13 +68,28 @@
 				<button onclick="swipe('+ i + ',\'right\')">Right</button>\
 				');
 			}
+			log('room started, start swiping',"#0f0");
 		});
+		socket.on('ended',()=>{
+			log('time up, everybody out',"#a00");
+		});
+		socket.on('results', (results) => {
+			search_results=results;
+			log('(got results, see search_results to view)','#faa');
+		});
+		socket.on('swipe_ack', (id) => {
+			log('swiped on '+id+', safe to remove from pile','#f66');
+		});
+		socket.on('vote_update', (swipe,id) => {
+			log('someone swiped '+swipe+' on '+id,'#f66');
+		});
+		
 
 
 
 
-		function log(msg) {
-			$('body').append($('<p>').text(msg));
+		function log(msg,color) {
+			$('body').append($('<p>').css('color', color).text(msg));
 		}
 	</script>
 </body>
