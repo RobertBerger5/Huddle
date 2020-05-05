@@ -1,9 +1,14 @@
 var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+var fetch = require("node-fetch");
 
 //sessions expire after this amount of time (1 hour in milliseconds)
 const MAX_TIME = 3600000;
+
+//Google Places API key
+const apiKey = 'AIzaSyDAuZt7d6V0zQn72hH7aSYT6HbhXwFyTSo';
+
 
 //don't need this with React-Native, but it really helps with testing
 app.get('/', (req, res) => {
@@ -152,17 +157,18 @@ function leaveRoom(socket) {
 
 //makes an api call, sends result (whenever it gets it) to room and keeps track of it
 async function getResults(id,socket) {
-	let ret = await getLocations();
+	let ret = await getLocations('restaurant', '44.4583', '-93.1616', '5000');
 	socket.emit('results', ret);//send creator the results
 	rooms[id].results = ret;//remember it on the server
 }
 
 //use Google Maps API (or whatever cheaper option we go with) to get the things
-async function getLocations(type) {
-	await sleep(1); //simulate network lag from asking google to send us things
-	let apiRet = makeApiCall();
+async function getLocations(type, lat, long, radius) {
+    var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + long + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
+	let apiRet = await makeApiCall(reqURL);
 	return clean(apiRet);
 }
+
 const sleep = (sec) => {
 	return new Promise(resolve => setTimeout(resolve, sec * 1000));
 }
@@ -196,8 +202,17 @@ function clean(places) {
   return ret;
 }
 
+//performs a google places api call
+function makeApiCall(reqURL) {
+    fetch(reqURL)
+    .then(res => res.json())
+    .then(json => {
+      return json;
+    });
+}
+
 //for now, just return this object from Myles' API call
-function makeApiCall() {
+function makeDummyCall() {
 	console.log("dummyCall");
 	let ret = {
 		"html_attributions": [],
