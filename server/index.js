@@ -6,7 +6,7 @@ var io = require('socket.io')(http);
 const MAX_TIME = 3600000;
 
 //Google Places API key
-const apiKey = 'AIzaSyDAuZt7d6V0zQn72hH7aSYT6HbhXwFyTSo';
+const apiKey = '';
 
 //don't need this with React-Native, but it really helps with testing
 app.get('/', (req, res) => {
