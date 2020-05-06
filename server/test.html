@@ -73,6 +73,7 @@
 		});
 		socket.on('ended',()=>{
 			log('time up, everybody out',"#a00");
+			socket.emit('leave');
 		});
 		socket.on('results', (results) => {
 			search_results=results;
@@ -85,7 +86,7 @@
 			log('someone swiped '+swipe+' on '+id,'#f66');
 		});
 		
-		
+
 		function log(msg,color) {
 			$('body').append($('<p>').css('color', color).text(msg));
 		}

@@ -17,15 +17,19 @@ app.get('/', (req, res) => {
 });
 
 /*TODO:
-	don't let people join after the room has started
-	add more checks, don't let them do things like swipe if they aren't in a room, or if the room doesn't have results
-	copy/paste search_results from browser into dummy call so we don't waste money while testing things other than the API calls
+	start vote? 50% of room wants start -> start
 */
 
+//like an enum, but everything is a hash map kinda thing in JS
+const status = {
+	CREATED: 'created',
+	READY: 'ready',
+	SWIPING: 'swiping'
+}
 /*global hash map for rooms with the key being the room id and value as object:
 	people = number of people
 	type = type of room (restaurant, bar, etc.)
-	status = (created, searching, found, resolved) (unused so far)
+	status = one of the values in the status object
 	results = return of the search API (initialized to null)
 */
 var rooms = {};
@@ -39,7 +43,7 @@ var rooms = {};
 	leave_ack: all clear, user has left succesfully (no string sent with it)
 	other_left: notification that someone else left, sends number of people in room now
 	started: all clear, begin swiping (no string sent with it)
-	ended: an hour has passed and the room has closed, everyone leave (no string sent with it)
+	ended: an hour has passed and the room has closed, everyone will be booted (can't figure out how to do that server-side, so politely request that the client boot themselves)
 	results: results from API call, sent ASAP on create or join
 	swipe_ack: swipe successful, take that restaurant out of the pile
 	vote_update: TBD, depending on if we want the "top results" to be calculated server-side or client-side
@@ -63,7 +67,7 @@ io.on('connection', (socket) => {
 	//request to create a room
 	socket.on('create', (type) => {
 		if (socket.mainRoom != null) {
-			socket.emit('user_err', 'Cannot join another room');
+			socket.emit('user_err', 'Cannot create a room while in one');
 			console.log("(someone tried to create a room while already in one)");
 			return;
 		}
@@ -80,16 +84,18 @@ io.on('connection', (socket) => {
 		socket.join(id); //socket.io join room
 		socket.mainRoom = id; //so we know which room they belong to
 		//initialize the room
-		rooms[id] = { people: 1, type: type, status: "created", results: null };
+		rooms[id] = { people: 1, type: type, status: status.CREATED, results: null };
 		socket.emit('created', id);
 		console.log("room created with id: " + id);
 
 		setTimeout(() => {
 			if (id in rooms) {
 				io.to(id).emit('ended');
-				io.sockets.in(id).leave(id); //TODO: check if that's right
+				//TODO: figure out how to boot em all
+				//delete rooms[id];
+				//console.log("deleting room " + id);
 			}
-			console.log("time limit exceeded for room " + id + ", everyone booted");
+			console.log("time limit exceeded for room " + id + ", everyone booted (boot themselves)");
 		}, MAX_TIME);
 
 		//SEARCH for the API call
@@ -103,34 +109,46 @@ io.on('connection', (socket) => {
 			console.log("(someone tried to join a room while already in one)");
 			return;
 		}
-
-		if (id in rooms) {
-			socket.join(id);//subscribe to socket.io room
-			socket.mainRoom = id;//so we know which room they belong to
-			rooms[id].people++;//one more person in
-			socket.emit('join_ack');//send only to new user
-			io.to(id).emit('other_joined', rooms[id].people);//send to all, including new user
-			console.log("user joined room " + id);
-
-			//send them the results to load in
-			socket.emit('results', rooms[id].results);
-		} else {
+		if (!(id in rooms)) {
 			socket.emit('user_err', 'Room "' + id + '" not found');
 			console.log("(someone tried to join a room that doesn't exist)");
+			return;
 		}
+		if (rooms[id].status == status.SWIPING) {
+			socket.emit('user_err', 'Room is already swiping, cannot join');
+			console.log("(someone tried to join a room that was already swiping");
+			return;
+		}
+
+		socket.join(id);//subscribe to socket.io room
+		socket.mainRoom = id;//so we know which room they belong to
+		rooms[id].people++;//one more person in
+		socket.emit('join_ack');//send only to new user
+		io.to(id).emit('other_joined', rooms[id].people);//send to all, including new user
+		console.log("user joined room " + id);
+
+		//send them the results to load in
+		socket.emit('results', rooms[id].results);
 	});
 
 	socket.on('start', () => {
-		if (socket.mainRoom == null) {
+		let id = socket.mainRoom;
+		if (id == null) {
 			socket.emit('user_err', 'Need to be in a room to start session');
 			console.log("(someone tried to start while not in a session)");
 			return;
+		} else if (rooms[id].status != status.READY) {
+			socket.emit('user_err', 'Cannot start session now');
+			console.log("(someone either tried to start the room when the room was still loading, or when it was already started)");
+			return;
 		}
 		//let everyone know that the session has started
+		rooms[id].status = status.SWIPING;
 		io.to(socket.mainRoom).emit('started');
 	});
 
 	socket.on('leave', () => {
+		//could disallow them to leave while the room status is "swiping", but we can't stop them from disconnecting
 		leaveRoom(socket);
 	});
 
@@ -146,6 +164,10 @@ io.on('connection', (socket) => {
 		if (id == null) {
 			socket.emit('user_err', 'Cannot swipe without being in a room');
 			console.log("(someone tried to swipe without being in a room)");
+			return;
+		} else if (rooms[id].status != status.SWIPING) {
+			socket.emit('user_err', 'Cannot swipe at this time');
+			console.log("(someone tried to swipe when the room wasn't ready");
 			return;
 		}
 		console.log("user voted " + swipe + " for " + rooms[id].results.results[locI].name);
@@ -185,9 +207,10 @@ function leaveRoom(socket) {
 
 //get results
 function getResults(id, socket, type, lat, lon, radius) {
-	
-	if(true){ //TODO: these are dummy results, change to "false" or delete before sending to production
-		rooms[id].results=makeDummyCall();
+
+	if (true) { //TODO: these are dummy results, change to "false" or delete before sending to production
+		rooms[id].results = makeDummyCall();
+		rooms[id].status = status.READY;
 		io.to(id).emit('results', rooms[id].results);
 		return;
 	}
@@ -229,6 +252,7 @@ function getPhoto(id, index) {
 
 		//checks to see if all photos have loaded: if they have, then we send the results
 		if (checkPhotos(rooms[id].results)) {
+			rooms[id].status = status.READY;
 			io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
 			//console.log(rooms[id].results);
 		}
