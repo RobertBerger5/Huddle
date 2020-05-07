@@ -2,6 +2,8 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Button, Text, View, Dimensions, Image, Animated, PanResponder } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
+import { Dropdown } from 'react-native-material-dropdown';
 
 class StartScreen extends React.Component {
     //Default constructor
@@ -20,11 +22,10 @@ class StartScreen extends React.Component {
 
 //Our main render
 render() {
-
     return (
 // FFE5CC
 //'#87bdd8'
-      <View style={{ flex: 1, backgroundColor: '#667292', justifyContent: 'center',
+      <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
       alignItems: 'center',}}>
         <View style={{ flex: 2.5, justifyContent: 'flex-end'}}>
         <Text style={styles.appName}>Convenir</Text>
@@ -34,7 +35,7 @@ render() {
         {/* Start Game button */}
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('HostWait')}>
+          onPress =  {() => this.props.navigation.navigate('Filter')}>
           <Text style={{fontWeight: 'bold',  fontSize: 20}}>Start Game</Text>
         </TouchableOpacity>
 
@@ -44,8 +45,7 @@ render() {
           onPress =  {() =>  this.props.navigation.navigate('Join')}>
           <Text style={{fontWeight: 'bold', fontSize: 20}}>Join Game</Text>
         </TouchableOpacity>
-
-        {/* <GoToButton navigation screenName="Join" title="Join Game"/> */}
+        
         </View>
 
       </View>
@@ -56,19 +56,20 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-    fontFamily: "Chalkduster", 
-    fontSize: 75, 
+    //fontFamily: 'Chalkduster',
+    //fontSize: 75,
+    fontSize: RFPercentage(9.5),
     fontWeight: 'bold',
-    color: '#bccad6', 
+    color: '#a78d8a', 
     padding: 40, 
   },
   btn: {
     // #daebe8
-    backgroundColor: '#f1e3dd',
-    borderColor: 'grey',
-    borderWidth: 0,
+    backgroundColor: '#e18a7a',
+    //borderColor: 'grey',
+    //borderWidth: 0,
     borderRadius: 12,
-    color: 'black',
+    color: '#a78d8a',
     overflow: 'hidden',
     padding: 20,
     textAlign:'center',
