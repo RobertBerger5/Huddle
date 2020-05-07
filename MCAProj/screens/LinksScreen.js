@@ -56,7 +56,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   option: {
-    backgroundColor: '#fdfdfd',
+    //#fdf6f2
+    //fdfdfd
+    backgroundColor: '#e18a7a',
     paddingHorizontal: 15,
     paddingVertical: 15,
     borderWidth: StyleSheet.hairlineWidth,
