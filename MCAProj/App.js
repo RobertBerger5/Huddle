@@ -16,7 +16,7 @@ import FilterScreen from './screens/FilterScreen.js';
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-const socket = socketIO('http://THISIP:3000', {
+const socket = socketIO('http://192.168.0.44:3000', {
 transports: ['websocket'], jsonp: false });
 
 const Tab = createBottomTabNavigator();
@@ -28,7 +28,7 @@ function MyTabs() {
       //activeTintColor: '#e91e63',
       activeTintColor: '#e18a7a',
     }}>
-      <Tab.Screen name="Home" component={HomeScreen} 
+      <Tab.Screen name="Home" component={HomeScreen}
               options={{
                 tabBarLabel: 'Home',
                 tabBarIcon: ({ color, size }) => (
@@ -36,9 +36,9 @@ function MyTabs() {
                   //color='#e18a7a'
                 ),
               }}
-      
+
       />
-      <Tab.Screen name="Top Picks" component={TopPicksScreen} 
+      <Tab.Screen name="Top Picks" component={TopPicksScreen}
               options={{
                 tabBarLabel: 'Top Picks',
                 tabBarIcon: ({ color, size }) => (
@@ -46,7 +46,7 @@ function MyTabs() {
                 ),
               }}
       />
-       {/* <Tab.Screen name="Back" component={StartScreen} 
+       {/* <Tab.Screen name="Back" component={StartScreen}
               options={{
                 tabBarLabel: 'Back',
                 tabBarIcon: ({ color, size }) => (
@@ -90,6 +90,7 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     socket.connect();
+    console.log('connect!');
     socket.on('connect', () => {
       console.log('connected to socket server');
     });
@@ -97,7 +98,7 @@ export default class App extends React.Component {
       console.log('connection to server lost');
     });
   }
-  
+
   state = {
     isLoadingComplete: false,
   }
