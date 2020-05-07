@@ -12,6 +12,7 @@ import WaitScreen from './screens/WaitScreen.js';
 import HostWaitScreen from './screens/HostWaitScreen.js';
 import { createStackNavigator } from '@react-navigation/stack';
 import JoinScreen from './screens/JoinScreen.js';
+import FilterScreen from './screens/FilterScreen.js';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -19,13 +20,15 @@ const Stack = createStackNavigator();
 function MyTabs() {
   return (
     <Tab.Navigator tabBarOptions={{
-      activeTintColor: '#e91e63',
+      //activeTintColor: '#e91e63',
+      activeTintColor: '#e18a7a',
     }}>
       <Tab.Screen name="Home" component={HomeScreen} 
               options={{
                 tabBarLabel: 'Home',
                 tabBarIcon: ({ color, size }) => (
                   <MaterialCommunityIcons name="home" color={color} size={size} />
+                  //color='#e18a7a'
                 ),
               }}
       
@@ -38,6 +41,14 @@ function MyTabs() {
                 ),
               }}
       />
+       {/* <Tab.Screen name="Back" component={StartScreen} 
+              options={{
+                tabBarLabel: 'Back',
+                tabBarIcon: ({ color, size }) => (
+                  <MaterialCommunityIcons name="account" color={color} size={size} />
+                ),
+              }}
+      /> */}
     </Tab.Navigator>
   );
 }
@@ -65,6 +76,7 @@ function MyStack() {
       <Stack.Screen name="Join" component={JoinScreen} />
       <Stack.Screen name="Wait" component={WaitScreen} />
       <Stack.Screen name="HostWait" component={HostWaitScreen} />
+      <Stack.Screen name="Filter" component={FilterScreen} />
     </Stack.Navigator>
   );
 }
@@ -98,6 +110,6 @@ export default class App extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fdf6f2',
   },
 })
