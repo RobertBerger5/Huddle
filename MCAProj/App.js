@@ -13,6 +13,11 @@ import HostWaitScreen from './screens/HostWaitScreen.js';
 import { createStackNavigator } from '@react-navigation/stack';
 import JoinScreen from './screens/JoinScreen.js';
 import FilterScreen from './screens/FilterScreen.js';
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
+
+const socket = socketIO('http://THISIP:3000', {
+transports: ['websocket'], jsonp: false });
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -82,6 +87,17 @@ function MyStack() {
 }
 
 export default class App extends React.Component {
+  constructor(props) {
+    super(props);
+    socket.connect();
+    socket.on('connect', () => {
+      console.log('connected to socket server');
+    });
+    socket.on('disconnect', () => {
+      console.log('connection to server lost');
+    });
+  }
+  
   state = {
     isLoadingComplete: false,
   }
