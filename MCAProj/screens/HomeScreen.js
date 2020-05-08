@@ -69,6 +69,7 @@ class HomeScreen extends React.Component {
             overflow: 'hidden',
             color: 'green'
           }}
+          useViewOverflow={Platform.OS === 'ios'}
         />
       </SafeAreaView>
     )
