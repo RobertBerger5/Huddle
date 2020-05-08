@@ -36,16 +36,16 @@ render() {
         <TouchableOpacity
           style={styles.btn}
           onPress =  {() => this.props.navigation.navigate('Filter')}>
-          <Text style={{fontWeight: 'bold',  fontSize: 20}}>Start Game</Text>
+          <Text style={{fontWeight: 'bold',  fontSize: 20}}>Create Room</Text>
         </TouchableOpacity>
 
         {/* Join game button */}
         <TouchableOpacity
           style={styles.btn}
           onPress =  {() =>  this.props.navigation.navigate('Join')}>
-          <Text style={{fontWeight: 'bold', fontSize: 20}}>Join Game</Text>
+          <Text style={{fontWeight: 'bold', fontSize: 20}}>Join Room</Text>
         </TouchableOpacity>
-        
+
         </View>
 
       </View>
@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
     //fontSize: 75,
     fontSize: RFPercentage(9.5),
     fontWeight: 'bold',
-    color: '#a78d8a', 
-    padding: 40, 
+    color: '#a78d8a',
+    padding: 40,
   },
   btn: {
     // #daebe8
