@@ -12,17 +12,19 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-const socket = socketIO('http://192.168.0.44:3000', {
-transports: ['websocket'], jsonp: false });
+//const socket = socketIO('http://192.168.0.44:3000', {
+//transports: ['websocket'], jsonp: false });
 
 class FilterScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props)
       this.state = {text: ''};
-      socket.on('created',(id)=>{
+      const { socket } = this.props.route.params;
+      this.socket = socket;
+      this.socket.on('created',(id)=>{
         console.log('created room '+id);
-        this.props.navigation.navigate('HostWait', {roomCode: id});
+        this.props.navigation.navigate('HostWait', {roomCode: id, socket: socket});
       });
     }
 
@@ -118,7 +120,7 @@ render() {
         <TouchableOpacity
           style={styles.btn}
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
-          onPress = {() => {socket.emit('create', 'restaurant');}}>
+          onPress = {() => {this.socket.emit('create', 'restaurant');}}>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Next</Text>
         </TouchableOpacity>
 

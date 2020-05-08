@@ -4,11 +4,28 @@ import { StyleSheet, TouchableOpacity, Button, Text, View, Dimensions, Image, An
 import { createStackNavigator } from '@react-navigation/stack';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import { Dropdown } from 'react-native-material-dropdown';
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
+
+const serverip = 'http://192.168.0.44:3000';
 
 class StartScreen extends React.Component {
     //Default constructor
-    constructor() {
-      super()
+    constructor(props) {
+      super(props);
+      this.socket = socketIO(serverip, {
+      transports: ['websocket'], jsonp: false });
+
+      this.socket.connect();
+      console.log('connect!');
+
+      this.socket.on('connect', () => {
+        console.log('connected to socket server');
+      });
+
+      this.socket.on('disconnect', () => {
+        console.log('connection to server lost');
+      });
     }
 
     startFunc = () => {
@@ -35,14 +52,14 @@ render() {
         {/* Start Game button */}
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('Filter')}>
+          onPress =  {() => this.props.navigation.navigate('Filter', {socket: this.socket})}>
           <Text style={{fontWeight: 'bold',  fontSize: 20}}>Create Room</Text>
         </TouchableOpacity>
 
         {/* Join game button */}
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() =>  this.props.navigation.navigate('Join')}>
+          onPress =  {() =>  this.props.navigation.navigate('Join', {socket: this.socket})}>
           <Text style={{fontWeight: 'bold', fontSize: 20}}>Join Room</Text>
         </TouchableOpacity>
 

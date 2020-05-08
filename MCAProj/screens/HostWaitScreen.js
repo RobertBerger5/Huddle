@@ -9,22 +9,19 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-//const socket = socketIO('http://192.168.0.44:3000', {
-//transports: ['websocket'], jsonp: false });
-
-
-
 class HostWaitScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
       const { roomCode } = this.props.route.params;
+      const { socket } = this.props.route.params;
+
       this.state = {names: 0, code: roomCode};
-      this.socket = socketIO('http://192.168.0.44:3000', {
-      transports: ['websocket'], jsonp: false });
+      this.socket = socket;
 
       this.socket.on('other_joined',(n)=>{
-        this.setState({ names: n});
+        console.log(n);
+        return this.setState((n)=>{names: n});
       });
     }
 
