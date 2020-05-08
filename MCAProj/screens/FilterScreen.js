@@ -17,12 +17,12 @@ transports: ['websocket'], jsonp: false });
 
 class FilterScreen extends React.Component {
     //Default constructor
-    constructor() {
-      super()
+    constructor(props) {
+      super(props)
       this.state = {text: ''};
       socket.on('created',(id)=>{
         console.log('created room '+id);
-        this.props.navigation.navigate('HostWait');
+        this.props.navigation.navigate('HostWait', {roomCode: id});
       });
     }
 

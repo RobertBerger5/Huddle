@@ -9,15 +9,26 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-const socket = socketIO('http://192.168.0.44:3000', {
-transports: ['websocket'], jsonp: false });
+//const socket = socketIO('http://192.168.0.44:3000', {
+//transports: ['websocket'], jsonp: false });
+
+
 
 class HostWaitScreen extends React.Component {
     //Default constructor
     constructor(props) {
-      super(props)
-      this.state = {names: 'Cory, Rob, Miles', code: '1234'};
+      super(props);
+      const { roomCode } = this.props.route.params;
+      this.state = {names: 0, code: roomCode};
+      this.socket = socketIO('http://192.168.0.44:3000', {
+      transports: ['websocket'], jsonp: false });
+
+      this.socket.on('other_joined',(n)=>{
+        this.setState({ names: n});
+      });
     }
+
+
 
   startFunc = () => {
     alert("Started Game!");
@@ -33,14 +44,14 @@ render() {
       alignItems: 'center',}}>
         <View style={{marginVertical: 10, marginHorizontal: 40, justifyContent: 'space-between'}}>
         <View style={[styles.box, {justifyContent: 'center', marginTop: 5}]}>
-        <Text style={{color: '#a78d8a', fontSize: RFPercentage(6), textAlign: 'center', fontWeight: 'bold', padding: 20}}>Game Code: {this.state.code}</Text>
+        <Text style={{color: '#a78d8a', fontSize: RFPercentage(6), textAlign: 'center', fontWeight: 'bold', padding: 20}}>Room Code: {this.state.code}</Text>
         </View>
         <TouchableOpacity
           style={styles.btn}
           onPress =  {() => this.props.navigation.navigate('Swipe')}>
           <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start Game</Text>
         </TouchableOpacity>
-        <Text style={styles.appName}>Players Who are in:</Text>
+        <Text style={styles.appName}>Total People in Room:</Text>
         <Text style={styles.appName}>{this.state.names}</Text>
         {/* <TouchableOpacity
           style={styles.btn}

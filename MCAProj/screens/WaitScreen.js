@@ -4,11 +4,20 @@ import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
+
+const socket = socketIO('http://192.168.0.44:3000', {
+transports: ['websocket'], jsonp: false });
+
 class WaitScreen extends React.Component {
     //Default constructor
-    constructor() {
-      super()
-      this.state = {names: 'Cory, Rob, Miles'};
+    constructor(props) {
+      super(props);
+      this.state = {names: 0};
+      socket.on('other_joined',(n)=>{
+  			this.setState({names: n});
+  		});
     }
 
   joinFunc = () => {
@@ -27,7 +36,7 @@ render() {
         <Text style={{color: 'white', fontSize: RFPercentage(5), textAlign: 'center', paddingBottom: 30, paddingHorizontal: 10}}>Waiting for host to start the session...</Text>
         </View>
         <View style={{flex:3.5, justifyContent: 'flex-top', marginVertical:50}}>
-        <Text style={[styles.appName, {paddingBottom: 30}]}>Players Who are in:</Text>
+        <Text style={[styles.appName, {paddingBottom: 30}]}>Total People in Room:</Text>
         <Text style={styles.appName}>{this.state.names}</Text>
         </View>
         {/* <TouchableOpacity
@@ -45,14 +54,14 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-    //fontFamily: "Chalkduster", 
+    //fontFamily: "Chalkduster",
     fontSize: RFPercentage(5),
     fontWeight: 'bold',
-    color: '#a78d8a', 
+    color: '#a78d8a',
     textAlign: 'center',
     //: #8d9db6d
     //#f1e3dd
-    //padding: 40, 
+    //padding: 40,
   },
   btn: {
     // #daebe8
@@ -67,7 +76,7 @@ const styles = StyleSheet.create({
     margin: 20,
   },
   box: {
-    backgroundColor: '#c0d8e3', 
+    backgroundColor: '#c0d8e3',
     borderRadius: 12,
     paddingVertical: 50,
   }
