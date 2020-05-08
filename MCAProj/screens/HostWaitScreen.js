@@ -16,20 +16,22 @@ class HostWaitScreen extends React.Component {
       const { roomCode } = this.props.route.params;
       const { socket } = this.props.route.params;
 
-      this.state = {names: 0, code: roomCode};
+      this.state = {names: 1, code: roomCode};
       this.socket = socket;
 
       this.socket.on('other_joined',(n)=>{
-        console.log(n);
-        return this.setState((n)=>{names: n});
+        this.setNum(n);
       });
     }
 
-
+    //set the number of people
+    setNum = (n) => {
+      this.setState({names: n});
+    }
 
   startFunc = () => {
     alert("Started Game!");
-}
+  }
 //Our main render
 render() {
 
