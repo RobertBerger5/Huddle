@@ -6,11 +6,17 @@ import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
+
+const socket = socketIO('http://192.168.0.44:3000', {
+transports: ['websocket'], jsonp: false });
+
 class HostWaitScreen extends React.Component {
     //Default constructor
-    constructor() {
-      super()
-      this.state = {names: 'Cory, Rob, Miles', code: 'ABC123'};
+    constructor(props) {
+      super(props)
+      this.state = {names: 'Cory, Rob, Miles', code: '1234'};
     }
 
   startFunc = () => {
@@ -50,15 +56,15 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-    //fontFamily: "Chalkduster", 
+    //fontFamily: "Chalkduster",
     fontSize: RFPercentage(4),
-    // fontSize: 35, 
+    // fontSize: 35,
     fontWeight: 'bold',
-    color: '#a78d8a', 
+    color: '#a78d8a',
     textAlign: 'center',
     //: #8d9db6
     //#f1e3dd
-    // padding: 20, 
+    // padding: 20,
   },
   btn: {
     // #daebe8
@@ -73,7 +79,7 @@ const styles = StyleSheet.create({
     margin: 20,
   },
   box: {
-    backgroundColor: '#c0d8e3', 
+    backgroundColor: '#c0d8e3',
     borderRadius: 12,
     paddingVertical: 50,
   }

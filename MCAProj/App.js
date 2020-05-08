@@ -91,12 +91,31 @@ export default class App extends React.Component {
     super(props);
     socket.connect();
     console.log('connect!');
+
     socket.on('connect', () => {
       console.log('connected to socket server');
     });
+
     socket.on('disconnect', () => {
       console.log('connection to server lost');
     });
+
+		socket.on('created',(id)=>{
+			console.log('created room '+id);
+		});
+		socket.on('join_ack', () => {
+			console.log('joined');
+		});
+		socket.on('other_joined',(n)=>{
+			console.log('someone joined, '+n+' people in room now');
+		});
+		socket.on('leave_ack',()=>{
+			console.log('left room');
+		});
+		socket.on('other_left',(n)=>{
+			console.log('someone left, '+n+' people in room now');
+		});
+
   }
 
   state = {
