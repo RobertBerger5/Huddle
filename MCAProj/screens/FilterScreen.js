@@ -9,11 +9,21 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 //import { Icon } from 'react-native-elements'
 //import Icon from 'react-native-ionicons'
 
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
+
+const socket = socketIO('http://192.168.0.44:3000', {
+transports: ['websocket'], jsonp: false });
+
 class FilterScreen extends React.Component {
     //Default constructor
     constructor() {
       super()
       this.state = {text: ''};
+      socket.on('created',(id)=>{
+        console.log('created room '+id);
+        this.props.navigation.navigate('HostWait');
+      });
     }
 
 //   joinFunc = () => {
@@ -107,10 +117,11 @@ render() {
         {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('HostWait')}>
+          //onPress =  {() => this.props.navigation.navigate('HostWait')}>
+          onPress = {() => {socket.emit('create', 'restaurant');}}>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Next</Text>
         </TouchableOpacity>
-       
+
         {/* </View> */}
         </View>
       </View>
@@ -121,13 +132,13 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-   // fontFamily: "Chalkduster", 
+   // fontFamily: "Chalkduster",
     fontSize: RFPercentage(3.5),
     fontWeight: 'bold',
-    color: '#a78d8a', 
+    color: '#a78d8a',
     //: #8d9db6
     //#f1e3dd
-    padding: 5, 
+    padding: 5,
     paddingTop: 15,
   },
   btn: {
@@ -144,8 +155,8 @@ const styles = StyleSheet.create({
   },
   drop: {
     //fontSize: 80,
-    // paddingRight: 40, 
-    // paddingLeft: 40, 
+    // paddingRight: 40,
+    // paddingLeft: 40,
     // paddingBottom: 10,
   }
 });

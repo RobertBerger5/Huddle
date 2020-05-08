@@ -4,11 +4,21 @@ import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
+
+const socket = socketIO('http://192.168.0.44:3000', {
+transports: ['websocket'], jsonp: false });
+
 class JoinScreen extends React.Component {
     //Default constructor
-    constructor() {
-      super()
+    constructor(props) {
+      super(props)
       this.state = {text: ''};
+      socket.on('join_ack', () => {
+  			console.log('joined');
+        this.props.navigation.navigate('Wait');
+  		});
     }
 
   joinFunc = () => {
@@ -25,9 +35,9 @@ render() {
       alignItems: 'center',}}>
          <View style={{marginTop: 50, marginBottom: 50, marginRight: 20, marginLeft: 20}}>
         <Text style={styles.appName}>Enter Game Code:</Text>
-        
+
         {/* <View> */}
-        <TextInput 
+        <TextInput
           style={{height: 40, paddingLeft: 15, paddingRight: 15, textAlign: 'center'}}
           placeholder="code"
           fontSize = '30px'
@@ -38,7 +48,7 @@ render() {
 
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('Wait')}>
+          onPress =  {() => socket.emit('join', this.state.text) }>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign: 'center'}}>Join Game</Text>
         </TouchableOpacity>
         {/* <TouchableOpacity
@@ -48,7 +58,7 @@ render() {
         </TouchableOpacity> */}
 
         </View>
-   
+
       </View>
 
     );
@@ -57,13 +67,13 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-    //fontFamily: "Chalkduster", 
+    //fontFamily: "Chalkduster",
     fontSize: RFPercentage(5),
     fontWeight: 'bold',
-    color: '#a78d8a', 
+    color: '#a78d8a',
     //: #8d9db6
     //#f1e3dd
-    padding: 40, 
+    padding: 40,
   },
   btn: {
     // #daebe8
