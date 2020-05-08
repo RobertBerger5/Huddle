@@ -7,17 +7,18 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-const socket = socketIO('http://192.168.0.44:3000', {
-transports: ['websocket'], jsonp: false });
-
 class JoinScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props)
+
+      const { socket } = this.props.route.params;
+      this.socket = socket;
+
       this.state = {text: ''};
-      socket.on('join_ack', () => {
+      this.socket.on('join_ack', () => {
   			console.log('joined');
-        this.props.navigation.navigate('Wait');
+        this.props.navigation.navigate('Wait', {socket: socket});
   		});
     }
 
@@ -48,7 +49,7 @@ render() {
 
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => socket.emit('join', this.state.text) }>
+          onPress =  {() => this.socket.emit('join', this.state.text) }>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign: 'center'}}>Join Game</Text>
         </TouchableOpacity>
         {/* <TouchableOpacity
