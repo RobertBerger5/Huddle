@@ -2,9 +2,6 @@ import React from 'react'
 // import { AppLoading, Asset, Font, Icon } from 'expo'
 // import { StatusBar, StyleSheet, View, Text } from 'react-native'
 
-import io from "socket.io-client";
-import socketIO from 'socket.io-client';
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from './node_modules/@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -17,10 +14,9 @@ import HostWaitScreen from './screens/HostWaitScreen.js';
 import { createStackNavigator } from '@react-navigation/stack';
 import JoinScreen from './screens/JoinScreen.js';
 import FilterScreen from './screens/FilterScreen.js';
+import io from "socket.io-client";
+import socketIO from 'socket.io-client';
 
-
-//const socket = socketIO('http://192.168.0.44:3000', {
-//transports: ['websocket'], jsonp: false });
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();

@@ -17,10 +17,14 @@ class WaitScreen extends React.Component {
       this.state = {names: 0};
 
       this.socket.on('other_joined',(n)=>{
-        console.log(n);
-        return this.setState((n)=>{names: n});
+        this.setNum(n);
       });
 
+    }
+
+    //set the number of people
+    setNum = (n) => {
+      this.setState({names: n});
     }
 
   joinFunc = () => {
