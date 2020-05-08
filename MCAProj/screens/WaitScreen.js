@@ -20,6 +20,15 @@ class WaitScreen extends React.Component {
         this.setNum(n);
       });
 
+      this.socket.on('results', (r) => {
+        results = r;
+      });
+
+      this.socket.on('started',()=>{
+        console.log('started');
+        this.props.navigation.navigate('Swipe', {results: results, socket: socket});
+      });
+
     }
 
     //set the number of people

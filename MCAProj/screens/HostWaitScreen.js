@@ -16,12 +16,24 @@ class HostWaitScreen extends React.Component {
       const { roomCode } = this.props.route.params;
       const { socket } = this.props.route.params;
 
+      var results;
+
       this.state = {names: 1, code: roomCode};
       this.socket = socket;
 
       this.socket.on('other_joined',(n)=>{
         this.setNum(n);
       });
+
+      this.socket.on('results', (r) => {
+        results = r;
+      });
+
+      this.socket.on('started',()=>{
+        console.log('started');
+        this.props.navigation.navigate('Swipe', {result: results, socket: socket});
+      });
+
     }
 
     //set the number of people
@@ -47,7 +59,7 @@ render() {
         </View>
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('Swipe')}>
+          onPress =  {() => this.socket.emit('start')}>
           <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start Game</Text>
         </TouchableOpacity>
         <Text style={styles.appName}>Total People in Room:</Text>
