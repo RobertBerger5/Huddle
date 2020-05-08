@@ -7,6 +7,13 @@ import Entypo from 'react-native-vector-icons/Entypo';
 
 
 class HomeScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    //const { result } = this.props.route.params;
+    //console.log(results);
+  }
+
+
   render() {
     return (
       <SafeAreaView style={styles.container}>
@@ -49,7 +56,7 @@ class HomeScreen extends React.Component {
                   color: 'white',
                   borderWidth: 1,
                   fontsize: 14,
-      
+
                 },
                 wrapper: {
                   flexDirection: 'column',
