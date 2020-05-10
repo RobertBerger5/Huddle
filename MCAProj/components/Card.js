@@ -6,14 +6,14 @@ import Layout from '../constants/Layout'
 
 const BOTTOM_BAR_HEIGHT = !Platform.isPad ? 29 : 49 // found from https://stackoverflow.com/a/50318831/6141587
 
-export const Card = ({ pic, title, caption }) => (
+export const Card = ({ photo, name, price_level }) => (
   <Tile
-    imageSrc={pic}
+    imageSrc={{uri:photo}}
     imageContainerStyle={styles.imageContainer}
     activeOpacity={0.9}
-    title={title}
+    title={name}
     titleStyle={styles.title}
-    caption={caption}
+    caption={price_level}
     captionStyle={styles.caption}
     containerStyle={styles.container}
     featured

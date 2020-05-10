@@ -13,7 +13,7 @@ class HomeScreen extends React.Component {
     const socket = props.socket;
     var index = props.index;
     //example results console.log();
-    console.log(result.results[0].name);
+    //onsole.log(result);
   }
 
 
@@ -21,7 +21,7 @@ class HomeScreen extends React.Component {
     return (
       <SafeAreaView style={styles.container}>
         <Swiper
-          cards={HomeScreenPics}
+          cards={this.props.result.results}
           renderCard={Card}
           infinite
           backgroundColor="white"
