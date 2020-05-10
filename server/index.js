@@ -4,41 +4,44 @@ var io = require('socket.io')(http);
 var fetch = require('node-fetch');
 var request = require('request');
 const { Pool } = require('pg');
-const fs=require('fs');
+const fs = require('fs');
 
 //sessions expire after this amount of time (1 hour in milliseconds)
 const MAX_TIME = 3600000;
 
 //Google Places API key
-let apiKey=null;
-try{
-	apiKey=fs.readFileSync('api.txt','utf8');
-	console.log(apiKey);
-}catch(err){
+let apiKey = null;
+try {
+	apiKey = fs.readFileSync('server/api.txt', 'utf8');
+	//console.log(apiKey);
+} catch (err) {
 	console.error(err);
 }
 
-let pass=null;
-try{
-	pass=fs.readFileSync('pass.txt','utf8');
-	console.log(pass);
-}catch(err){
-	console.error(err);
+let pass = null;
+let db = false;
+if (db) {
+	try {
+		pass = fs.readFileSync('server/pass.txt', 'utf8');
+		//console.log(pass);
+	} catch (err) {
+		console.error(err);
+	}
+	const pool = new Pool({
+		user: 'berger6',
+		password: pass,
+		host: 'csinparallel.cs.stolaf.edu',
+		database: 'mca_s20',
+		port: 5432
+	});
+	pool.on('connect', client => {
+		client.query(`SET search_path=berger6,public;`);
+		console.log("connected to db");
+	});
+	pool.on('error', (err, client) => {
+		console.error('Unexpected error on idle client', err);
+	});
 }
-const pool = new Pool({
-	user: 'berger6',
-	password: pass,
-	host: 'csinparallel.cs.stolaf.edu',
-	database: 'mca_s20',
-	port: 5432
-});
-pool.on('connect', client => {
-	client.query(`SET search_path=berger6,public;`);
-	console.log("connected to db");
-});
-pool.on('error', (err, client) => {
-	console.error('Unexpected error on idle client', err);
-})
 
 //don't need this with React-Native, but it really helps with testing
 app.get('/', (req, res) => {
@@ -118,7 +121,7 @@ io.on('connection', (socket) => {
 			people: 1,
 			maxPeople: 1,
 			filters: {
-				type:type,
+				type: type,
 				long: 0,
 				lat: 0,
 				range: 10,
@@ -166,8 +169,8 @@ io.on('connection', (socket) => {
 		socket.join(id);//subscribe to socket.io room
 		socket.mainRoom = id;//so we know which room they belong to
 		rooms[id].people++;//one more person in
-		if(rooms[id].people>rooms[id].maxPeople){
-			rooms[id.maxPeople]=rooms[id].people;
+		if (rooms[id].people > rooms[id].maxPeople) {
+			rooms[id.maxPeople] = rooms[id].people;
 		}
 		socket.emit('join_ack');//send only to new user
 		io.to(id).emit('other_joined', rooms[id].people);//send to all, including new user
@@ -240,39 +243,41 @@ function leaveRoom(socket) {
 	rooms[id].people--;
 	if (rooms[id].people <= 0) { //("<" shouldn't be necessary, but just in case)
 		//no one left, get rid of the empty room
-		//BUT FIRST! note some analytical data in the database!
-		let currTime = Date.now() % MAX_TIME;
-		let duration = (currTime - parseInt(id, 36)) % MAX_TIME; //how long it was in ms
-		if(duration<0){duration+=MAX_TIME}//TODO: check if this fixes overflow properly
-		let status = rooms[id].status;
-		let people = rooms[id].maxPeople;
-		let lat = 0;
-		let lng = 0;
-		let places_found = rooms[id].results.results.length; //# of locations given to swipe through
-		let type = rooms[id].filters.type;
-		let range = 10; //in miles (or whatever the user input unit is I guess)
-		let rate = 1; //rating of restaurants, from 1-5 (I think)
-		let price = 1; //$, $$, or $$$
-		pool.query('INSERT INTO use_info (duration,status,people,lat,lng,places_found,type,range,rate,price) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [duration, status, people, lat, lng, places_found, type, range, rate, price]).then(res => {
-			console.log('DB response: ' + res.rows[0]);
-		}).catch(err =>
-			setImmediate(() => {
-				throw err;
-			}));
-		/*for reference, here's how the table was created:
-		CREATE TABLE use_info (          
-			id serial PRIMARY KEY,
-			duration INT,
-			status VARCHAR(16),
-			people SMALLINT,
-			lat FLOAT(8),
-			lng FLOAT(8),
-			places_found SMALLINT,
-			type VARCHAR(255),
-			range SMALLINT,
-			rate SMALLINT,
-			price SMALLINT
-		);*/
+		if (db) {
+			//BUT FIRST! note some analytical data in the database!
+			let currTime = Date.now() % MAX_TIME;
+			let duration = (currTime - parseInt(id, 36)) % MAX_TIME; //how long it was in ms
+			if (duration < 0) { duration += MAX_TIME }//TODO: check if this fixes overflow properly
+			let status = rooms[id].status;
+			let people = rooms[id].maxPeople;
+			let lat = 0;
+			let lng = 0;
+			let places_found = rooms[id].results.results.length; //# of locations given to swipe through
+			let type = rooms[id].filters.type;
+			let range = 10; //in miles (or whatever the user input unit is I guess)
+			let rate = 1; //rating of restaurants, from 1-5 (I think)
+			let price = 1; //$, $$, or $$$
+			pool.query('INSERT INTO use_info (duration,status,people,lat,lng,places_found,type,range,rate,price) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [duration, status, people, lat, lng, places_found, type, range, rate, price]).then(res => {
+				console.log('DB response: ' + res.rows[0]);
+			}).catch(err =>
+				setImmediate(() => {
+					throw err;
+				}));
+			/*for reference, here's how the table was created:
+			CREATE TABLE use_info (          
+				id serial PRIMARY KEY,
+				duration INT,
+				status VARCHAR(16),
+				people SMALLINT,
+				lat FLOAT(8),
+				lng FLOAT(8),
+				places_found SMALLINT,
+				type VARCHAR(255),
+				range SMALLINT,
+				rate SMALLINT,
+				price SMALLINT
+			);*/
+		}
 		delete rooms[id];
 		console.log("deleting room " + id);
 	} else {
