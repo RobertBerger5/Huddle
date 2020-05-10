@@ -9,8 +9,11 @@ import Entypo from 'react-native-vector-icons/Entypo';
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
-    //const { result } = this.props.route.params;
-    //console.log(results);
+    const result = props.result;
+    const socket = props.socket;
+    var index = props.index;
+    //example results console.log();
+    console.log(result.results[0].name);
   }
 
 

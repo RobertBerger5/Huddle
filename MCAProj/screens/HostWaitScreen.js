@@ -31,7 +31,6 @@ class HostWaitScreen extends React.Component {
 
       this.socket.on('started',()=>{
         console.log('started');
-        console.log(results.results[0].name);
         this.props.navigation.navigate('Swipe', {result: results, socket: socket});
       });
 

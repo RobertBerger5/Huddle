@@ -7,6 +7,9 @@ import { Dropdown } from 'react-native-material-dropdown';
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
+
+//'http://65.128.45.107:3000'
+
 const serverip = 'http://192.168.0.44:3000';
 
 class StartScreen extends React.Component {
