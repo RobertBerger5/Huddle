@@ -17,17 +17,24 @@ import FilterScreen from './screens/FilterScreen.js';
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-function MyTabs() {
+console.disableYellowBox = true;
+
+function MyTabs(props) {
+
+  //passed props for results and socket information
+  const result = props.result;
+  const socket = props.socket;
+  const index = 0;
+
   return (
     <Tab.Navigator tabBarOptions={{
       //activeTintColor: '#e91e63',
       activeTintColor: '#e18a7a',
     }}>
-      <Tab.Screen name="Home" component={HomeScreen}
+      <Tab.Screen name="Home" component={ () => <HomeScreen result = {result} socket = {socket} index = {index}/>}
               options={{
                 tabBarLabel: 'Home',
                 tabBarIcon: ({ color, size }) => (
@@ -37,6 +44,7 @@ function MyTabs() {
               }}
 
       />
+
       <Tab.Screen name="Top Picks" component={TopPicksScreen}
               options={{
                 tabBarLabel: 'Top Picks',
@@ -57,11 +65,13 @@ function MyTabs() {
   );
 }
 
-function Swipe(){
+function Swipe(props){
+  const { result } = props.route.params;
+  const { socket } = props.route.params;
   return(
       <View style={styles.container}>
           <StatusBar hidden />
-       <MyTabs/>
+       <MyTabs result = {result} socket = {socket}/>
       </View>
   )
 }
