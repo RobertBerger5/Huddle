@@ -13,11 +13,12 @@
 	<button onclick="leaveRoom()">Leave</button>
 	<br />
 	<button onclick="start()">Start</button>
+	<button onclick="requestResults()">Request Results</button>
 	<ul id="results"></ul>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 	<script>
-		let search_results=null;
+		let search_results = null;
 
 		var socket = io();
 
@@ -36,58 +37,62 @@
 		function swipe(locI, swipe) {
 			socket.emit('swipe', locI, swipe);
 		}
+		function requestResults() {
+			socket.emit('request_top_results');
+		}
 
 
-		socket.on('user_err',(msg)=>{
-			log(msg,"red");
+		socket.on('user_err', (msg) => {
+			log(msg, "red");
 		});
 		socket.on('message', (msg) => {
-			log(msg,"black");
+			log(msg, "black");
 		});
-		socket.on('created',(id)=>{
-			log('created room '+id,"#0a0");
+		socket.on('created', (id) => {
+			log('created room ' + id, "#0a0");
 		});
 		socket.on('join_ack', () => {
-			log('joined','#00f');
+			log('joined', '#00f');
 		});
-		socket.on('other_joined',(n)=>{
-			log('someone joined, '+n+' people in room now',"#aaf");
+		socket.on('other_joined', (n) => {
+			log('someone joined, ' + n + ' people in room now', "#aaf");
 		});
-		socket.on('leave_ack',()=>{
-			log('left room',"#00f");
+		socket.on('leave_ack', () => {
+			log('left room', "#00f");
 		});
-		socket.on('other_left',(n)=>{
-			log('someone left, '+n+' people in room now',"#aaf");
+		socket.on('other_left', (n) => {
+			log('someone left, ' + n + ' people in room now', "#aaf");
 		});
-		socket.on('started', ()=>{
+		socket.on('started', () => {
 			console.log(search_results);
 			for (let i = 0; i < search_results.results.length; i++) {
 				let loc = search_results.results[i];
 				$('#results').append('\
-				<li class="result">'+ loc.name + '</li>\
-				<button onclick="swipe('+ i + ',\'left\')">Left</button>\
-				<button onclick="swipe('+ i + ',\'right\')">Right</button>\
+				<li class="result">'+ i + ": " + loc.name + '</li>\
+				<button onclick="swipe('+ i + ',1)">Left</button>\
+				<button onclick="swipe('+ i + ',2)">Right</button>\
 				');
 			}
-			log('room started, start swiping',"#0f0");
+			log('room started, start swiping', "#0f0");
 		});
-		socket.on('ended',()=>{
-			log('time up, everybody out',"#a00");
+		socket.on('ended', () => {
+			log('time up, everybody out', "#a00");
 			socket.emit('leave');
 		});
 		socket.on('results', (results) => {
-			search_results=results;
-			log('(got results, see search_results to view)','#afa');
+			search_results = results;
+			log('(got results, see search_results to view)', '#afa');
 		});
 		socket.on('swipe_ack', (id) => {
-			log('swiped on '+id+', safe to remove from pile','#6f6');
+			log('swiped on ' + id + ', safe to remove from pile', '#6f6');
 		});
-		socket.on('vote_update', (swipe,id) => {
-			log('someone swiped '+swipe+' on '+id,'#f66');
+		socket.on('top_results', (top) => {
+			top_results = top;
+			log('(got top results, see top_results to view)', '#afa');
 		});
-		
 
-		function log(msg,color) {
+
+		function log(msg, color) {
 			$('body').append($('<p>').css('color', color).text(msg));
 		}
 	</script>

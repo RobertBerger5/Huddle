@@ -9,10 +9,20 @@ const fs = require('fs');
 //sessions expire after this amount of time (1 hour in milliseconds)
 const MAX_TIME = 3600000;
 
+//like an enum, but everything is a hash map kinda thing in JS
+const status = { //TODO: indicator of if they agreed on a place or not
+	CREATED: 'created',
+	READY: 'ready',
+	SWIPING: 'swiping'
+}
+
+const LEFT=1;
+const RIGHT=2;
+
 //Google Places API key
 let apiKey = null;
 try {
-	apiKey = fs.readFileSync('server/api.txt', 'utf8');
+	apiKey = fs.readFileSync('api.txt', 'utf8');
 	//console.log(apiKey);
 } catch (err) {
 	console.error(err);
@@ -22,7 +32,7 @@ let pass = null;
 let db = false;
 if (db) {
 	try {
-		pass = fs.readFileSync('server/pass.txt', 'utf8');
+		pass = fs.readFileSync('pass.txt', 'utf8');
 		//console.log(pass);
 	} catch (err) {
 		console.error(err);
@@ -52,18 +62,13 @@ app.get('/', (req, res) => {
 	start vote? 50% of room wants start -> start
 */
 
-//like an enum, but everything is a hash map kinda thing in JS
-const status = { //TODO: indicator of if they agreed on a place or not
-	CREATED: 'created',
-	READY: 'ready',
-	SWIPING: 'swiping'
-}
 /*global hash map for rooms with the key being the room id and value as object:
 	people = number of people
 	maxPeople = most amount of people that were in there at any given point
 	type = type of room (restaurant, bar, etc.)
 	status = one of the values in the status object
 	results = return of the search API (initialized to null)
+	votes = array (in same length & order of "results") of 3-long arrays: index, left votes, and right votes for each location
 */
 var rooms = {};
 
@@ -79,7 +84,8 @@ var rooms = {};
 	ended: an hour has passed and the room has closed, everyone will be booted (can't figure out how to do that server-side, so politely request that the client boot themselves)
 	results: results from API call, sent ASAP on create or join
 	swipe_ack: swipe successful, take that restaurant out of the pile
-	vote_update: TBD, depending on if we want the "top results" to be calculated server-side or client-side
+	top_results: sorted top results, as requested (array of 3-long arrays)
+		note - these are all in the form [room index, lefts, rights]
 */
 
 /*TYPES OF EVENTS THE SERVER EXPECTS:
@@ -87,7 +93,8 @@ var rooms = {};
 	join: user joins a room, sends them how many others are in the room, as well as the API results (if successful)
 	start: user starts the room, sends back an acknowledgement that they may begin swiping (if successful)
 	leave: user leaves the room, sends back acknowledgement to that user that they left the room, and a notice to other users that someone left (if successful)
-	swipe: user has swiped, doesn't send anything back at the moment
+	swipe: user has swiped, sends back (probably pointless) acknowledgement that they can take that card out of the pile now
+	request_top_results: show me the top results so far, sends back sorted array of top results
 
 	disconnect: user has disconnected, socket.io sends this automatically
 */
@@ -129,7 +136,8 @@ io.on('connection', (socket) => {
 				price: 2
 			},
 			status: status.CREATED,
-			results: null
+			results: null,
+			votes: null
 		};
 		socket.emit('created', id);
 		console.log("room created with id: " + id);
@@ -207,8 +215,7 @@ io.on('connection', (socket) => {
 
 	//API results returned to user, and they're making choices
 	socket.on('swipe', (locI, swipe) => {
-		//user swiped {swipe} on {results.candidates[locI]}
-		//very minimal at the moment, doesn't even check if they're in a room and that the room has searched / has results
+		//user swiped 0 or 1 (LEFT or RIGHT) on {results.candidates[locI]}
 		let id = socket.mainRoom;
 		if (id == null) {
 			socket.emit('user_err', 'Cannot swipe without being in a room');
@@ -220,8 +227,22 @@ io.on('connection', (socket) => {
 			return;
 		}
 		console.log("user voted " + swipe + " for " + rooms[id].results.results[locI].name);
+		rooms[id].votes[locI][swipe]++;
 		socket.emit('swipe_ack', locI);
-		io.to(id).emit('vote_update', swipe, locI);
+	});
+	socket.on('request_top_results', () => {
+		let id = socket.mainRoom;
+		if (id == null) {
+			socket.emit('user_err', 'Cannot request results without being in a room');
+			console.log("(someone tried to request results without being in a room)");
+			return;
+		} else if (rooms[id].status != status.SWIPING) {
+			socket.emit('user_err', 'No results at this time');
+			console.log("(someone tried to get results when the room wasn't ready");
+			return;
+		}
+		console.log("user requested top results");
+		socket.emit('top_results', rooms[id].votes.sort(compareSwipes));
 	});
 });
 
@@ -229,6 +250,26 @@ io.on('connection', (socket) => {
 http.listen(3000, () => {
 	console.log('listening on *:3000');
 });
+
+function compareSwipes(a,b){
+	let aScore=a[RIGHT]-a[LEFT];
+	let bScore=b[RIGHT]-b[LEFT];
+	return (bScore-aScore); //ones with more right swipes should show up first
+}
+/*function mean(arr){
+	let total=0;
+	for(let i of arr){
+		total+=i;
+	}
+	return (total/arr.length);
+}*/
+
+function initSwipes(room){
+	room.votes=[];
+	for (let i=0;i<room.results.results.length;i++) {
+		room.votes.push([i,0, 0]);
+	}
+}
 
 //leaves socket.mainRoom, used both when a user clicks "leave" and when they disconnect
 function leaveRoom(socket) {
@@ -294,6 +335,7 @@ function getResults(id, socket, type, lat, lon, radius) {
 
 	if (true) { //TODO: these are dummy results, change to "false" or delete before sending to production
 		rooms[id].results = makeDummyCall();
+		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
 		io.to(id).emit('results', rooms[id].results);
 		return;
@@ -336,6 +378,7 @@ function getPhoto(id, index) {
 
 		//checks to see if all photos have loaded: if they have, then we send the results
 		if (checkPhotos(rooms[id].results)) {
+			initSwipes(rooms[id]);
 			rooms[id].status = status.READY;
 			io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
 			//console.log(rooms[id].results);
