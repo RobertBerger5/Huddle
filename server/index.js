@@ -3,6 +3,7 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var fetch = require('node-fetch');
 var request = require('request');
+const yelp = require('yelp-fusion');
 const { Pool } = require('pg');
 const fs = require('fs');
 
@@ -27,6 +28,15 @@ try {
 } catch (err) {
 	console.error(err);
 }
+
+//manually load in the API key
+apiKey = '';
+
+//Define the yelp api call
+const apiCall = yelp.client(apiKey);
+
+//Decide if were using a dummy call or not (for development purposes)
+const dummyApi = false;
 
 let pass = null;
 let db = false;
@@ -105,7 +115,7 @@ io.on('connection', (socket) => {
 	socket.mainRoom = null;
 
 	//request to create a room
-	socket.on('create', (type) => {
+	socket.on('create', (filters) => {
 		if (socket.mainRoom != null) {
 			socket.emit('user_err', 'Cannot create a room while in one');
 			console.log("(someone tried to create a room while already in one)");
@@ -127,18 +137,12 @@ io.on('connection', (socket) => {
 		rooms[id] = {
 			people: 1,
 			maxPeople: 1,
-			filters: {
-				type: type,
-				long: 0,
-				lat: 0,
-				range: 10,
-				rate: 6,
-				price: 2
-			},
+			filters: filters,
 			status: status.CREATED,
 			results: null,
 			votes: null
 		};
+
 		socket.emit('created', id);
 		console.log("room created with id: " + id);
 
@@ -153,7 +157,7 @@ io.on('connection', (socket) => {
 		}, MAX_TIME);
 
 		//SEARCH for the API call
-		getResults(id, socket, 'restaurant', '44.4583', '-93.1616', '5000'); //emits 'results' with API results back to room creator
+		getResults(id, socket, rooms[id].filters.type, rooms[id].filters.long, rooms[id].filters.lat, rooms[id].filters.range, rooms[id].filters.rate, rooms[id].filters.price); //emits 'results' with API results back to room creator
 	});
 
 	//request to join a room
@@ -305,7 +309,7 @@ function leaveRoom(socket) {
 					throw err;
 				}));
 			/*for reference, here's how the table was created:
-			CREATE TABLE use_info (          
+			CREATE TABLE use_info (
 				id serial PRIMARY KEY,
 				duration INT,
 				status VARCHAR(16),
@@ -330,10 +334,10 @@ function leaveRoom(socket) {
 	//console.log(rooms);
 }
 
-//get results
-function getResults(id, socket, type, lat, lon, radius) {
+//get results rooms[id].type, rooms[id].long, rooms[id].lat, rooms[id].range, rooms[id].rate, rooms[id].price
+function getResults(id, socket, type, long, lat, range, rate, price) {
 
-	if (true) { //TODO: these are dummy results, change to "false" or delete before sending to production
+	if (dummyApi) { //TODO: these are dummy results, change to "false" or delete before sending to production
 		rooms[id].results = makeDummyCall();
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
@@ -341,8 +345,87 @@ function getResults(id, socket, type, lat, lon, radius) {
 		return;
 	}
 
+	//Build the yelp search request
+	let searchRequest = {
+		term: type,
+		latitude: lat,
+		longitude: long,
+		open_now: true,
+		limit: 50,
+	};
 
+	switch(price) {
+		case '$':
+			searchRequest.price=1;
+			break;
+		case '$$':
+			searchRequest.price=2;
+			break;
+		case '$$$':
+			searchRequest.price=3;
+			break;
+		case 'Any':
+		default:
+			break;
+	}
 
+	switch(range) {
+		case '1/2 Mile':
+			searchRequest.range=0.5*1609;
+			break;
+		case '1 Mile':
+			searchRequest.range=1*1609;
+			break;
+		case '5 Miles':
+			searchRequest.range=5*1609;
+			break;
+		case '15 Miles':
+			searchRequest.range=15*1609;
+			break;
+		case '25 Miles':
+			searchRequest.range=25*1600;
+			break;
+		case 'Any':
+		default:
+			searchRequest.range=40000;
+			break;
+	}
+
+	switch(rate) {
+		case '*':
+			rate = 1;
+			break;
+		case '**':
+			rate = 2;
+			break;
+		case '***':
+			rate = 3;
+			break;
+		case '****':
+			rate = 4;
+			break;
+		case '*****':
+			rate = 4.5;
+			break;
+		case 'Any':
+		default:
+			rate = 0;
+			break;
+	}
+
+	//Yelp api call
+	apiCall.search(searchRequest).then(response => {
+	  let ret = clean(response, rate, searchRequest.range/1600);
+		rooms[id].results = ret;//remember it on the server
+		initSwipes(rooms[id]);
+		rooms[id].status = status.READY;
+		io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
+		console.log(ret);
+	}).catch(e => {
+	  console.log(e);
+	});
+
+	/*
 	//create our api call
 	var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + lon + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
 	fetch(reqURL)
@@ -361,9 +444,41 @@ function getResults(id, socket, type, lat, lon, radius) {
 				i++;
 			}
 
-		});
+		});*/
 }
 
+//Clean the api results to just what we need YELP API
+function clean(places, rating, distance) {
+	//create our return
+	var ret = { results: [] };
+
+	//begin parsing our results
+	let i = 0;
+	while (places.jsonBody.businesses[i]) {
+		//get our current result values
+		let cur = places.jsonBody.businesses[i];
+		//Our temp to push to our ret array
+		let temp = {
+			//lat: cur.geometry.location.lat, //latitude
+			//lng: cur.geometry.location.lng, //longitude
+      distance: Math.round(10*(cur.distance/1609))/10,
+			name: cur.name, //place name
+			photo: cur.image_url,
+			price_level: cur.price, //price Level
+			rating: cur.rating, //User ratings
+			user_ratings_total: cur.review_count //how many ratings
+		};
+
+		//Push cleaned values to returned array
+		if(temp.rating >= rating && temp.distance <= distance) ret.results.push(temp);
+		i++; //increment to the next value
+	}
+
+	//return our cleaned array
+	return ret;
+}
+
+/*
 //Gets the photo urls for every photo by following the api redirect
 function getPhoto(id, index) {
 	//creates our api call url
@@ -397,6 +512,7 @@ function checkPhotos(ret) {
 	return true;
 }
 
+
 //Clean the api results to just what we need
 function clean(places) {
 	//create our return
@@ -427,6 +543,8 @@ function clean(places) {
 	//return our cleaned array
 	return ret;
 }
+
+*/
 
 //for now, just return this object from Myles' API call
 function makeDummyCall() {

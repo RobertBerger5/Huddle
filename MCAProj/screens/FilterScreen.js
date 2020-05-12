@@ -12,20 +12,36 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 
-//const socket = socketIO('http://192.168.0.44:3000', {
-//transports: ['websocket'], jsonp: false });
-
 class FilterScreen extends React.Component {
     //Default constructor
     constructor(props) {
-      super(props)
-      this.state = {text: ''};
+      super(props);
+      this.state = {
+        type: 'Restaurants',
+        long: '',
+        lat: '',
+        range: 'Any',
+        rate: 'Any',
+        price: 'Any'
+      };
+
+      //Get current location and set state
+      navigator.geolocation.getCurrentPosition(p => {
+        let lat = p.coords.latitude;
+        let long = p.coords.longitude;
+        this.setState({long: long, lat: lat})
+      });
+
+      //initialize sockets passed from props
       const { socket } = this.props.route.params;
       this.socket = socket;
+
+      //Listen for succesful creation
       this.socket.on('created',(id)=>{
         console.log('created room '+id);
         this.props.navigation.navigate('HostWait', {roomCode: id, socket: socket});
       });
+
     }
 
 //   joinFunc = () => {
@@ -48,6 +64,10 @@ render() {
   }];
 
   let range = [{
+    value: 'Any'
+  },{
+    value: '1 Mile',
+  },{
     value: '5 Miles',
   }, {
     value: '15 Miles',
@@ -56,8 +76,10 @@ render() {
   }];
 
   let rate = [{
+    value: 'Any',
+  },{
     value: '*',
-    },{
+  },{
     value: '**',
   }, {
     value: '***',
@@ -68,8 +90,10 @@ render() {
   }];
 
   let price = [{
+    value: 'Any',
+  },{
     value: '$',
-  }, {
+  },{
     value: '$$',
   }, {
     value: '$$$',
@@ -90,6 +114,8 @@ render() {
         style={styles.drop}
         label='Place Type'
         data={data}
+        defaultValue='Restaurants'
+        onChangeText = {type => this.setState({type})}
         />
         {/* </View> */}
         {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
@@ -98,6 +124,8 @@ render() {
         style={styles.drop}
         label='Distance'
         data={range}
+        defaultValue='Any'
+        onChangeText = {range => this.setState({range})}
         />
         {/* </View> */}
         {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
@@ -106,6 +134,8 @@ render() {
         style={styles.drop}
         label='Rating'
         data={rate}
+        defaultValue='Any'
+        onChangeText = {rate => this.setState({rate})}
         />
         {/* </View> */}
         {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
@@ -114,13 +144,23 @@ render() {
         style={styles.drop}
         label='Price'
         data={price}
+        defaultValue='Any'
+        onChangeText = {price => this.setState({price})}
         />
         {/* </View> */}
         {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
         <TouchableOpacity
           style={styles.btn}
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
-          onPress = {() => {this.socket.emit('create', 'restaurant');}}>
+          onPress = {() => {this.socket.emit('create', {
+              type: this.state.type,
+              long: this.state.long,
+              lat: this.state.lat,
+              range: this.state.range,
+              rate: this.state.rate,
+              price: this.state.price
+            });
+          }}>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Next</Text>
         </TouchableOpacity>
 
