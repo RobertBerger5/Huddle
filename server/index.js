@@ -29,9 +29,6 @@ try {
 	console.error(err);
 }
 
-//manually load in the API key
-apiKey = '';
-
 //Define the yelp api call
 const apiCall = yelp.client(apiKey);
 
@@ -420,7 +417,7 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
 		io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
-		console.log(ret);
+		//console.log(ret);
 	}).catch(e => {
 	  console.log(e);
 	});
