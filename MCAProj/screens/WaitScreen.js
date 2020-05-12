@@ -26,7 +26,7 @@ class WaitScreen extends React.Component {
 
       this.socket.on('started',()=>{
         console.log('started');
-        this.props.navigation.navigate('Swipe', {results: results, socket: socket});
+        this.props.navigation.navigate('Swipe', {result: results, socket: socket});
       });
 
     }

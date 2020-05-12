@@ -9,6 +9,7 @@ import socketIO from 'socket.io-client';
 
 
 //'http://65.128.45.107:3000'
+//'http://192.168.0.44:3000'
 
 const serverip = 'http://192.168.0.44:3000';
 
