@@ -49,7 +49,8 @@ render() {
       <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center', alignItems: 'center'}}>
         <View style={{marginVertical:50, marginHorizontal:20, justifyContent: 'center'}}>
         <View style={[styles.box, {flex:1.5, justifyContent: 'center', marginTop: 60}]}>
-        <Text style={{color: 'white', fontSize: RFPercentage(5), textAlign: 'center', paddingBottom: 30, paddingHorizontal: 10}}>Waiting for host to start the session...</Text>
+        <Text style={{color: 'white', fontSize: RFPercentage(5), textAlign: 'center', paddingBottom: 30, paddingHorizontal: 10}}>Waiting for host
+        to start the session...</Text>
         </View>
         <View style={{flex:3.5, justifyContent: 'flex-top', marginVertical:50}}>
         <Text style={[styles.appName, {paddingBottom: 30}]}>Total People in Room:</Text>

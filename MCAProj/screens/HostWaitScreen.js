@@ -60,7 +60,7 @@ render() {
         <TouchableOpacity
           style={styles.btn}
           onPress =  {() => this.socket.emit('start')}>
-          <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start Game</Text>
+          <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start</Text>
         </TouchableOpacity>
         <Text style={styles.appName}>Total People in Room:</Text>
         <Text style={styles.appName}>{this.state.names}</Text>
