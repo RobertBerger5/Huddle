@@ -35,11 +35,11 @@ render() {
       <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
       alignItems: 'center',}}>
          <View style={{marginTop: 50, marginBottom: 50, marginRight: 20, marginLeft: 20}}>
-        <Text style={styles.appName}>Enter Game Code:</Text>
+        <Text style={styles.appName}>Enter Room Code:</Text>
 
         {/* <View> */}
         <TextInput
-          style={{height: 40, paddingLeft: 15, paddingRight: 15, textAlign: 'center'}}
+          style={{height: Platform.OS == 'android' ? 80 : 40, paddingLeft: 15, paddingRight: 15, textAlign: 'center'}}
           placeholder="code"
           fontSize = '30px'
           onChangeText = {(text) => this.setState({text})}
@@ -50,7 +50,7 @@ render() {
         <TouchableOpacity
           style={styles.btn}
           onPress =  {() => this.socket.emit('join', this.state.text) }>
-          <Text style={{fontWeight: 'bold', fontSize: 20, textAlign: 'center'}}>Join Game</Text>
+          <Text style={{fontWeight: 'bold', fontSize: 20, textAlign: 'center'}}>Join</Text>
         </TouchableOpacity>
         {/* <TouchableOpacity
           style={styles.btn}
