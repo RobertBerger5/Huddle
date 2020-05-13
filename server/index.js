@@ -11,7 +11,7 @@ const fs = require('fs');
 const MAX_TIME = 3600000;
 
 //like an enum, but everything is a hash map kinda thing in JS
-const status = { //TODO: indicator of if they agreed on a place or not
+const status = { //TODO: indicator of if they agreed on a place or not for analytics
 	CREATED: 'created',
 	READY: 'ready',
 	SWIPING: 'swiping'
@@ -26,9 +26,10 @@ const RIGHT=2;
 let apiKey = null;
 try {
 	apiKey = fs.readFileSync('api.txt', 'utf8');
-	console.log(apiKey);
+	//console.log(apiKey);
 } catch (err) {
 	console.error(err);
+	console.log("(make sure you were in the 'server' directory when you launched node)");
 }
 
 //Define the yelp api call (https://www.yelp.com/developers/documentation/v3/business_search)
@@ -45,6 +46,7 @@ if (db) {
 		//console.log(pass);
 	} catch (err) {
 		console.error(err);
+		console.log("(make sure you were in the 'server' directory when you launched node)");
 	}
 	const pool = new Pool({
 		user: 'berger6',
@@ -158,9 +160,13 @@ io.on('connection', (socket) => {
 			}
 			console.log("time limit exceeded for room " + id + ", everyone booted (boot themselves)");
 		}, MAX_TIME);
-
-		//SEARCH for the API call
-		getResults(id, socket, filters.type, filters.long, filters.lat, filters.range, filters.rate, filters.price); //emits 'results' with API results back to room creator
+		try{
+			//SEARCH for the API call
+			getResults(id, socket, filters.type, filters.long, filters.lat, filters.range, filters.rate, filters.price); //emits 'results' with API results back to room creator
+		}catch(err){
+			console.log(err);
+			console.log("User probably gave weird filters");
+		}
 	});
 
 	//request to join a room
@@ -169,13 +175,11 @@ io.on('connection', (socket) => {
 			socket.emit('user_err', 'Cannot join another room');
 			console.log("(someone tried to join a room while already in one)");
 			return;
-		}
-		if (!(id in rooms)) {
+		}else if (typeof(id)!='string' || !(id in rooms)) {
 			socket.emit('user_err', 'Room "' + id + '" not found');
 			console.log("(someone tried to join a room that doesn't exist)");
 			return;
-		}
-		if (rooms[id].status == status.SWIPING) {
+		}else if (rooms[id].status == status.SWIPING) {
 			socket.emit('user_err', 'Room is already swiping, cannot join');
 			console.log("(someone tried to join a room that was already swiping");
 			return;
@@ -231,6 +235,11 @@ io.on('connection', (socket) => {
 		} else if (rooms[id].status != status.SWIPING) {
 			socket.emit('user_err', 'Cannot swipe at this time');
 			console.log("(someone tried to swipe when the room wasn't ready");
+			return;
+		}else if(typeof(locI)!='number' || (swipe!==1 && swipe!==2)){
+			socket.emit('user_err', 'Unexpected swipe input');
+			console.log(locI+' ('+typeof(locI)+') and '+swipe+' ('+typeof(swipe)+')')
+			console.log("(someone tried to give some weird swipe input types)");
 			return;
 		}else if(locI<0 || locI>rooms[id].votes.length-1){
 			socket.emit('user_err','Location index is out of range');
@@ -337,7 +346,7 @@ function leaveRoom(socket) {
 //get results rooms[id].type, rooms[id].long, rooms[id].lat, rooms[id].range, rooms[id].rate, rooms[id].price
 function getResults(id, socket, type, long, lat, range, rate, price) {
 
-	if (dummyApi) { //TODO: these are dummy results, change to "false" or delete before sending to production
+	if (dummyApi) {
 		rooms[id].results = makeDummyCall();
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
@@ -415,14 +424,10 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 			break;
 	}
 
-	console.log('searchRequest:');
-	console.log(searchRequest)
-
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {
-		console.log(response);
 	  let ret = clean(response, rate);
-	  console.log(ret);
+	  console.log('room '+id+' has '+ret.results.length+' results');
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
