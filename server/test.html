@@ -23,7 +23,15 @@
 		var socket = io();
 
 		function createRoom(type) {
-			socket.emit('create', type);
+			filters={
+				type: type,
+				long: -91.788338,
+				lat: 43.303291,
+				range: '25 Miles',
+				rate: '***',
+				price: '$$'
+			}
+			socket.emit('create', filters);
 		}
 		function joinRoom(id) {
 			socket.emit('join', id);
