@@ -11,16 +11,14 @@ const fs = require('fs');
 const MAX_TIME = 3600000;
 
 //like an enum, but everything is a hash map kinda thing in JS
-const status = { //TODO: indicator of if they agreed on a place or not for analytics
+const status = { //TODO: indicator of if they agreed on a place or not? for analytics
 	CREATED: 'created',
 	READY: 'ready',
 	SWIPING: 'swiping'
 }
 
-//TODO: security (https://www.synopsys.com/blogs/software-security/node-js-socket-io/  ?)
-
-const LEFT=1;
-const RIGHT=2;
+const LEFT = 1;
+const RIGHT = 2;
 
 //Google Places API key
 let apiKey = null;
@@ -115,6 +113,7 @@ var rooms = {};
 */
 
 io.on('connection', (socket) => {
+	console.dir(socket);
 	console.log('user connected');
 	//start without a room by default. Also, users are only ever in one room at a time
 	socket.mainRoom = null;
@@ -160,10 +159,10 @@ io.on('connection', (socket) => {
 			}
 			console.log("time limit exceeded for room " + id + ", everyone booted (boot themselves)");
 		}, MAX_TIME);
-		try{
+		try {
 			//SEARCH for the API call
 			getResults(id, socket, filters.type, filters.long, filters.lat, filters.range, filters.rate, filters.price); //emits 'results' with API results back to room creator
-		}catch(err){
+		} catch (err) {
 			console.log(err);
 			console.log("User probably gave weird filters");
 		}
@@ -175,11 +174,11 @@ io.on('connection', (socket) => {
 			socket.emit('user_err', 'Cannot join another room');
 			console.log("(someone tried to join a room while already in one)");
 			return;
-		}else if (typeof(id)!='string' || !(id in rooms)) {
+		} else if (typeof (id) != 'string' || !(id in rooms)) {
 			socket.emit('user_err', 'Room "' + id + '" not found');
 			console.log("(someone tried to join a room that doesn't exist)");
 			return;
-		}else if (rooms[id].status == status.SWIPING) {
+		} else if (rooms[id].status == status.SWIPING) {
 			socket.emit('user_err', 'Room is already swiping, cannot join');
 			console.log("(someone tried to join a room that was already swiping");
 			return;
@@ -236,13 +235,13 @@ io.on('connection', (socket) => {
 			socket.emit('user_err', 'Cannot swipe at this time');
 			console.log("(someone tried to swipe when the room wasn't ready");
 			return;
-		}else if(typeof(locI)!='number' || (swipe!==1 && swipe!==2)){
+		} else if (typeof (locI) != 'number' || (swipe !== 1 && swipe !== 2)) {
 			socket.emit('user_err', 'Unexpected swipe input');
-			console.log(locI+' ('+typeof(locI)+') and '+swipe+' ('+typeof(swipe)+')')
+			console.log(locI + ' (' + typeof (locI) + ') and ' + swipe + ' (' + typeof (swipe) + ')')
 			console.log("(someone tried to give some weird swipe input types)");
 			return;
-		}else if(locI<0 || locI>rooms[id].votes.length-1){
-			socket.emit('user_err','Location index is out of range');
+		} else if (locI < 0 || locI > rooms[id].votes.length - 1) {
+			socket.emit('user_err', 'Location index is out of range');
 			console.log("(someone tried to swipe on an index out of range)");
 			return;
 		}
@@ -271,16 +270,16 @@ http.listen(3000, () => {
 	console.log('listening on *:3000');
 });
 
-function compareSwipes(a,b){
-	let aScore=a[RIGHT]-a[LEFT];
-	let bScore=b[RIGHT]-b[LEFT];
-	return (bScore-aScore); //ones with more right swipes should show up first
+function compareSwipes(a, b) {
+	let aScore = a[RIGHT] - a[LEFT];
+	let bScore = b[RIGHT] - b[LEFT];
+	return (bScore - aScore); //ones with more right swipes should show up first
 }
 
-function initSwipes(room){
-	room.votes=[];
-	for (let i=0;i<room.results.results.length;i++) {
-		room.votes.push([i,0, 0]);
+function initSwipes(room) {
+	room.votes = [];
+	for (let i = 0; i < room.results.results.length; i++) {
+		room.votes.push([i, 0, 0]);
 	}
 }
 
@@ -364,15 +363,15 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 	};
 
 	//TODO: change these to just be numbers instead
-	switch(price) {
+	switch (price) {
 		case '$':
-			searchRequest.price=1;
+			searchRequest.price = 1;
 			break;
 		case '$$':
-			searchRequest.price=2;
+			searchRequest.price = 2;
 			break;
 		case '$$$':
-			searchRequest.price=3;
+			searchRequest.price = 3;
 			break;
 		case 'Any':
 		default:
@@ -380,29 +379,29 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 	}
 
 	//TODO: make this a number too
-	switch(range) {
+	switch (range) {
 		case '1/2 Mile':
-			searchRequest.radius=0.5*1609;
+			searchRequest.radius = 0.5 * 1609;
 			break;
 		case '1 Mile':
-			searchRequest.radius=1*1609;
+			searchRequest.radius = 1 * 1609;
 			break;
 		case '5 Miles':
-			searchRequest.radius=5*1609;
+			searchRequest.radius = 5 * 1609;
 			break;
 		case '15 Miles':
-			searchRequest.radius=15*1609;
+			searchRequest.radius = 15 * 1609;
 			break;
 		case '25 Miles':
-			searchRequest.radius=25*1600;
+			searchRequest.radius = 25 * 1600;
 			break;
 		case 'Any':
 		default:
-			searchRequest.radius=40000;
+			searchRequest.radius = 40000;
 			break;
 	}
 
-	switch(rate) {
+	switch (rate) {
 		case '*':
 			rate = 1;
 			break;
@@ -426,15 +425,15 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {
-	  let ret = clean(response, rate);
-	  console.log('room '+id+' has '+ret.results.length+' results');
+		let ret = clean(response, rate);
+		console.log('room ' + id + ' has ' + ret.results.length + ' results');
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
 		io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
 		//console.log(ret);
 	}).catch(e => {
-	  console.log(e);
+		console.log(e);
 	});
 }
 
@@ -452,7 +451,8 @@ function clean(places, rating) {
 		let temp = {
 			//lat: cur.geometry.location.lat, //latitude
 			//lng: cur.geometry.location.lng, //longitude
-      distance: Math.round(10*(cur.distance/1609))/10,
+			id:i,
+			distance: Math.round(10 * (cur.distance / 1609)) / 10,
 			name: cur.name, //place name
 			photo: cur.image_url,
 			price_level: cur.price, //price Level
@@ -461,7 +461,7 @@ function clean(places, rating) {
 		};
 
 		//Push cleaned values to returned array
-		if(temp.rating >= rating) ret.results.push(temp);
+		if (temp.rating >= rating) ret.results.push(temp);
 		i++; //increment to the next value
 	}
 
