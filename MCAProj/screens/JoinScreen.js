@@ -10,7 +10,8 @@ import socketIO from 'socket.io-client';
 class JoinScreen extends React.Component {
     //Default constructor
     constructor(props) {
-      super(props)
+      super(props);
+      //console.log("hi");
 
       const { socket } = this.props.route.params;
       this.socket = socket;
@@ -19,7 +20,7 @@ class JoinScreen extends React.Component {
       this.socket.on('join_ack', () => {
   			console.log('joined');
         this.props.navigation.navigate('Wait', {socket: socket});
-  		});
+      });
     }
 
   joinFunc = () => {
@@ -27,6 +28,7 @@ class JoinScreen extends React.Component {
 }
 //Our main render
 render() {
+  console.log("rendering");
 
     return (
 // FFE5CC
@@ -41,7 +43,7 @@ render() {
         <TextInput
           style={{height: Platform.OS == 'android' ? 80 : 40, paddingLeft: 15, paddingRight: 15, textAlign: 'center'}}
           placeholder="code"
-          fontSize = '30px'
+          //fontSize = '30px' //for some reason this line breaks the android version, I'll just comment it out for now
           onChangeText = {(text) => this.setState({text})}
           value={this.state.text}
           />
@@ -59,7 +61,6 @@ render() {
         </TouchableOpacity> */}
 
         </View>
-
       </View>
 
     );
