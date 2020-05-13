@@ -24,7 +24,7 @@ const RIGHT=2;
 let apiKey = null;
 try {
 	apiKey = fs.readFileSync('api.txt', 'utf8');
-	//console.log(apiKey);
+	console.log(apiKey);
 } catch (err) {
 	console.error(err);
 }
@@ -158,7 +158,7 @@ io.on('connection', (socket) => {
 		}, MAX_TIME);
 
 		//SEARCH for the API call
-		getResults(id, socket, rooms[id].filters.type, rooms[id].filters.long, rooms[id].filters.lat, rooms[id].filters.range, rooms[id].filters.rate, rooms[id].filters.price); //emits 'results' with API results back to room creator
+		getResults(id, socket, filters.type, filters.long, filters.lat, filters.range, filters.rate, filters.price); //emits 'results' with API results back to room creator
 	});
 
 	//request to join a room
@@ -265,13 +265,6 @@ function compareSwipes(a,b){
 	let bScore=b[RIGHT]-b[LEFT];
 	return (bScore-aScore); //ones with more right swipes should show up first
 }
-/*function mean(arr){
-	let total=0;
-	for(let i of arr){
-		total+=i;
-	}
-	return (total/arr.length);
-}*/
 
 function initSwipes(room){
 	room.votes=[];
@@ -359,6 +352,7 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 		limit: 50,
 	};
 
+	//TODO: change these to just be numbers instead
 	switch(price) {
 		case '$':
 			searchRequest.price=1;
@@ -374,25 +368,26 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 			break;
 	}
 
+	//TODO: make this a number too
 	switch(range) {
 		case '1/2 Mile':
-			searchRequest.range=0.5*1609;
+			searchRequest.radius=0.5*1609;
 			break;
 		case '1 Mile':
-			searchRequest.range=1*1609;
+			searchRequest.radius=1*1609;
 			break;
 		case '5 Miles':
-			searchRequest.range=5*1609;
+			searchRequest.radius=5*1609;
 			break;
 		case '15 Miles':
-			searchRequest.range=15*1609;
+			searchRequest.radius=15*1609;
 			break;
 		case '25 Miles':
-			searchRequest.range=25*1600;
+			searchRequest.radius=25*1600;
 			break;
 		case 'Any':
 		default:
-			searchRequest.range=40000;
+			searchRequest.radius=40000;
 			break;
 	}
 
@@ -418,9 +413,14 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 			break;
 	}
 
+	console.log('searchRequest:');
+	console.log(searchRequest)
+
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {
+		console.log(response);
 	  let ret = clean(response, rate, searchRequest.range/1600);
+	  console.log(ret);
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
