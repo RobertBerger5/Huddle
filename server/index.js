@@ -419,7 +419,7 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {
 		console.log(response);
-	  let ret = clean(response, rate, searchRequest.range/1600);
+	  let ret = clean(response, rate);
 	  console.log(ret);
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
@@ -429,31 +429,10 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 	}).catch(e => {
 	  console.log(e);
 	});
-
-	/*
-	//create our api call
-	var reqURL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + lat + "," + lon + "&radius=" + radius + "&type=restaurant&key=" + apiKey;
-	fetch(reqURL)
-		.then(res => res.json())
-		.then(json => {
-			//api call return json, then cleans it
-			let ret = clean(json);
-
-			//io.to(id).emit('results', ret);//send creator the results
-			rooms[id].results = ret;//remember it on the server
-
-			//parse through our results to get all the photos
-			let i = 0;
-			while (rooms[id].results.results[i]) {
-				getPhoto(id, i);
-				i++;
-			}
-
-		});*/
 }
 
 //Clean the api results to just what we need YELP API
-function clean(places, rating, distance) {
+function clean(places, rating) {
 	//create our return
 	var ret = { results: [] };
 
@@ -475,81 +454,13 @@ function clean(places, rating, distance) {
 		};
 
 		//Push cleaned values to returned array
-		if(temp.rating >= rating && temp.distance <= distance) ret.results.push(temp);
+		if(temp.rating >= rating) ret.results.push(temp);
 		i++; //increment to the next value
 	}
 
 	//return our cleaned array
 	return ret;
 }
-
-/*
-//Gets the photo urls for every photo by following the api redirect
-function getPhoto(id, index) {
-	//creates our api call url
-	let getUrl = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=' + rooms[id].results.results[index].photoRaw + '&key=' + apiKey;
-
-	//requests the api call
-	let r = request.get(getUrl, function (err, res, body) {
-		//callback function -- update results once we have them
-		rooms[id].results.results[index].photo = r.uri.href;
-
-		//console.log(rooms[id].results.results[index].photo);
-
-		//checks to see if all photos have loaded: if they have, then we send the results
-		if (checkPhotos(rooms[id].results)) { //TODO: wait a couple seconds so it's harder for people to spam room creation?
-			initSwipes(rooms[id]);
-			rooms[id].status = status.READY;
-			io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
-			//console.log(rooms[id].results);
-		}
-	});
-}
-
-//checks to see if all of the photos have loaded in
-function checkPhotos(ret) {
-	let i = 0; //parse through all values from the photos
-	while (ret.results[i]) {
-		if (ret.results[i].photo == null) return false; //return false if not all have been updated
-		i++;
-	}
-	//return true if we get through the array without finding a missing photo
-	return true;
-}
-
-
-//Clean the api results to just what we need
-function clean(places) {
-	//create our return
-	var ret = { results: [] };
-
-	//begin parsing our results
-	let i = 0;
-	while (places.results[i]) {
-		//get our current result values
-		let cur = places.results[i];
-		//Our temp to push to our ret array
-		let temp = {
-			lat: cur.geometry.location.lat, //latitude
-			lng: cur.geometry.location.lng, //longitude
-			name: cur.name, //place name
-			photoRaw: cur.photos[0].photo_reference, //the raw photo reference for the api call
-			photo: null, //retrieve this later
-			price_level: cur.price_level, //price Level
-			rating: cur.rating, //User ratings
-			user_ratings_total: cur.user_ratings_total //how many ratings
-		};
-
-		//Push cleaned values to returned array
-		ret.results.push(temp);
-		i++; //increment to the next value
-	}
-
-	//return our cleaned array
-	return ret;
-}
-
-*/
 
 //for now, just return this object from Myles' API call
 function makeDummyCall() {
