@@ -17,6 +17,8 @@ const status = { //TODO: indicator of if they agreed on a place or not
 	SWIPING: 'swiping'
 }
 
+//TODO: security (https://www.synopsys.com/blogs/software-security/node-js-socket-io/  ?)
+
 const LEFT=1;
 const RIGHT=2;
 
@@ -29,7 +31,7 @@ try {
 	console.error(err);
 }
 
-//Define the yelp api call
+//Define the yelp api call (https://www.yelp.com/developers/documentation/v3/business_search)
 const apiCall = yelp.client(apiKey);
 
 //Decide if were using a dummy call or not (for development purposes)
@@ -219,7 +221,7 @@ io.on('connection', (socket) => {
 	});
 
 	//API results returned to user, and they're making choices
-	socket.on('swipe', (locI, swipe) => { //TODO: make sure it's not out of range
+	socket.on('swipe', (locI, swipe) => {
 		//user swiped 0 or 1 (LEFT or RIGHT) on {results.candidates[locI]}
 		let id = socket.mainRoom;
 		if (id == null) {
