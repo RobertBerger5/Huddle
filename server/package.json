@@ -8,6 +8,7 @@
 		"node-fetch": "^2.6.0",
 		"pg": "^8.1.0",
 		"request": "^2.88.2",
-		"socket.io": "^2.3.0"
+		"socket.io": "^2.3.0",
+		"yelp-fusion": "^3.0.0"
 	}
 }
