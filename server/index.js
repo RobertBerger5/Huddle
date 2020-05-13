@@ -58,6 +58,10 @@ app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/test.html');
 });
 
+/*app.get('/hack/', (req, res) => {
+	res.sendFile(__dirname + '/hacker.html');
+});*/
+
 /*TODO:
 	start vote? 50% of room wants start -> start
 */
@@ -157,7 +161,7 @@ io.on('connection', (socket) => {
 	});
 
 	//request to join a room
-	socket.on('join', (id) => {
+	socket.on('join', (id) => { //TODO: log IP's, keep track of who's spamming join requests
 		if (socket.mainRoom != null) {
 			socket.emit('user_err', 'Cannot join another room');
 			console.log("(someone tried to join a room while already in one)");
@@ -214,7 +218,7 @@ io.on('connection', (socket) => {
 	});
 
 	//API results returned to user, and they're making choices
-	socket.on('swipe', (locI, swipe) => {
+	socket.on('swipe', (locI, swipe) => { //TODO: make sure it's not out of range
 		//user swiped 0 or 1 (LEFT or RIGHT) on {results.candidates[locI]}
 		let id = socket.mainRoom;
 		if (id == null) {
@@ -224,6 +228,10 @@ io.on('connection', (socket) => {
 		} else if (rooms[id].status != status.SWIPING) {
 			socket.emit('user_err', 'Cannot swipe at this time');
 			console.log("(someone tried to swipe when the room wasn't ready");
+			return;
+		}else if(locI<0 || locI>rooms[id].votes.length-1){
+			socket.emit('user_err','Location index is out of range');
+			console.log("(someone tried to swipe on an index out of range)");
 			return;
 		}
 		console.log("user voted " + swipe + " for " + rooms[id].results.results[locI].name);
@@ -377,7 +385,7 @@ function getPhoto(id, index) {
 		//console.log(rooms[id].results.results[index].photo);
 
 		//checks to see if all photos have loaded: if they have, then we send the results
-		if (checkPhotos(rooms[id].results)) {
+		if (checkPhotos(rooms[id].results)) { //TODO: wait a couple seconds so it's harder for people to spam room creation?
 			initSwipes(rooms[id]);
 			rooms[id].status = status.READY;
 			io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
