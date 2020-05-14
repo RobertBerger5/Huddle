@@ -7,6 +7,7 @@ import { Dropdown } from 'react-native-material-dropdown';
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Entypo';
+import Modal from 'react-native-modal';
 
 
 //'http://65.128.45.107:3000'
@@ -16,10 +17,12 @@ const serverip = 'http://65.128.45.107:3000';
 
 var {height, width} = Dimensions.get('window');
 
+
 class StartScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
+     // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
       transports: ['websocket'], jsonp: false });
 
@@ -33,32 +36,29 @@ class StartScreen extends React.Component {
       this.socket.on('disconnect', () => {
         console.log('connection to server lost');
       });
-    }
 
-    startFunc = () => {
-      alert("yooo");
-  }
+      this.state ={
+        isModalVisible: false,
+      }
+  
+    }
 
   joinFunc = () => {
    // alert("you joined!");
    navigation.navigate('Join')
   }
 
+toggleModal = () => {
+  var bool = this.state.isModalVisible;
+  this.setState({isModalVisible: !bool});
+  };
 
-  // import Icon from 'react-native-vector-icons/FontAwesome';
-  // const myButton = (
-    // <Icon.Button
-    //   name="facebook"
-    //   backgroundColor="#3b5998"
-    //   onPress={this.loginWithFacebook}
-    // >
-    //   Login with Facebook
-    // </Icon.Button>
-  // );
 
 
 //Our main render
 render() {
+
+ // var isModalVisible = false;
     return (
 // FFE5CC
 //'#87bdd8'
@@ -70,7 +70,25 @@ render() {
           name="cog"
           color='#a78d8a'
           size={35}
-          onPress={this.startFunc}></Icon>
+         onPress={this.toggleModal}></Icon>
+        {/* onPress={() => this.setState({isModalVisible: true})}></Icon> */}
+        
+        <Modal 
+        isVisible={this.state.isModalVisible}
+        deviceWidth={width}
+        deviceHeight={height}
+        color = 'white'
+        >
+          <View style={{flex: 1, margin: 20, justifyContent: 'center'}}>
+            <View style={{backgroundColor: '#fdf6f2', margin: 20,  borderRadius: 12, padding: 20}}>
+            <Text>Hello!</Text>
+            <Button title="Close" onPress={this.toggleModal} color='#e18a7a' />
+            </View>
+          </View>
+        </Modal>
+
+
+
       </View>
       <View style={{ flex: 1.5, justifyContent: 'flex-end'}}>
         <Text style={styles.appName}>Convenir</Text>
@@ -122,4 +140,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default StartScreen
+export default StartScreen;
