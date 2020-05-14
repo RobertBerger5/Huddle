@@ -11,14 +11,16 @@ import socketIO from 'socket.io-client';
 //'http://65.128.45.107:3000'
 //'http://192.168.0.44:3000'
 
-const serverip = 'http://192.168.0.44:3000';
+const serverip = 'http://173.28.80.230:3000';
 
 class StartScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
       this.socket = socketIO(serverip, {
-      transports: ['websocket'], jsonp: false });
+        query:'pass=password',  
+        transports: ['websocket'], jsonp: false 
+      });
 
       this.socket.connect();
       console.log('connect!');
