@@ -8,7 +8,7 @@ import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Entypo';
 import Modal from 'react-native-modal';
-
+import CheckBox from 'react-native-check-box'
 
 //'http://65.128.45.107:3000'
 //'http://192.168.0.44:3000'
@@ -39,6 +39,7 @@ class StartScreen extends React.Component {
 
       this.state ={
         isModalVisible: false,
+        isChecked: false
       }
   
     }
@@ -80,8 +81,15 @@ render() {
         color = 'white'
         >
           <View style={{flex: 1, margin: 20, justifyContent: 'center'}}>
-            <View style={{backgroundColor: '#fdf6f2', margin: 20,  borderRadius: 12, padding: 20}}>
-            <Text>Hello!</Text>
+            <View style={{backgroundColor: '#fdf6f2', borderRadius: 12, padding: 20}}>
+            <View style={{ flexDirection: 'row', justifyContent: 'center',  alignItems: 'center'}}>
+            <Text style={{color: '#a78d8a', fontSize: RFPercentage(3)}}>Wheelchair Accessible</Text>
+            <CheckBox
+              style={{flex: 1, padding: 10, margin: 10, color:'#a78d8a' }}
+              onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
+              isChecked={this.state.isChecked}
+              />
+              </View>
             <Button title="Close" onPress={this.toggleModal} color='#e18a7a' />
             </View>
           </View>
