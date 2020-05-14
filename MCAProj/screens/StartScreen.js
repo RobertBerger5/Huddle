@@ -6,17 +6,23 @@ import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import { Dropdown } from 'react-native-material-dropdown';
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
-
+import Icon from 'react-native-vector-icons/Entypo';
+import Modal from 'react-native-modal';
+import CheckBox from 'react-native-check-box'
 
 //'http://65.128.45.107:3000'
 //'http://192.168.0.44:3000'
 
-const serverip = 'http://173.28.80.230:3000';
+const serverip = 'http://65.128.45.107:3000';
+
+var {height, width} = Dimensions.get('window');
+
 
 class StartScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
+     // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
         query:'pass=password',  
         transports: ['websocket'], jsonp: false 
@@ -32,29 +38,73 @@ class StartScreen extends React.Component {
       this.socket.on('disconnect', () => {
         console.log('connection to server lost');
       });
-    }
 
-    startFunc = () => {
-      alert("yooo");
-  }
+      this.state ={
+        isModalVisible: false,
+        isChecked: false
+      }
+  
+    }
 
   joinFunc = () => {
    // alert("you joined!");
    navigation.navigate('Join')
   }
 
+toggleModal = () => {
+  var bool = this.state.isModalVisible;
+  this.setState({isModalVisible: !bool});
+  };
+
+
+
 //Our main render
 render() {
+
+ // var isModalVisible = false;
     return (
 // FFE5CC
 //'#87bdd8'
       <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
       alignItems: 'center',}}>
-        <View style={{ flex: 2.5, justifyContent: 'flex-end'}}>
-        <Text style={styles.appName}>Convenir</Text>
-        </View>
 
-        <View style={{ flex: 3.5, justifyContent: 'flex-start'}}>
+      <View style={{ flex: 1, marginTop: height * 0.08, paddingLeft: width * 0.80, marginRight: 5}}>
+          <Icon
+          name="cog"
+          color='#a78d8a'
+          size={35}
+         onPress={this.toggleModal}></Icon>
+        {/* onPress={() => this.setState({isModalVisible: true})}></Icon> */}
+        
+        <Modal 
+        isVisible={this.state.isModalVisible}
+        deviceWidth={width}
+        deviceHeight={height}
+        color = 'white'
+        >
+          <View style={{flex: 1, margin: 20, justifyContent: 'center'}}>
+            <View style={{backgroundColor: '#fdf6f2', borderRadius: 12, padding: 20}}>
+            <View style={{ flexDirection: 'row', justifyContent: 'center',  alignItems: 'center'}}>
+            <Text style={{color: '#a78d8a', fontSize: RFPercentage(3)}}>Wheelchair Accessible</Text>
+            <CheckBox
+              style={{flex: 1, padding: 10, margin: 10, color:'#a78d8a' }}
+              onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
+              isChecked={this.state.isChecked}
+              />
+              </View>
+            <Button title="Close" onPress={this.toggleModal} color='#e18a7a' />
+            </View>
+          </View>
+        </Modal>
+
+
+
+      </View>
+      <View style={{ flex: 1.5, justifyContent: 'flex-end'}}>
+        <Text style={styles.appName}>Convenir</Text>
+      </View>
+
+      <View style={{ flex: 3.5, justifyContent: 'flex-start'}}>
         {/* Start Game button */}
         <TouchableOpacity
           style={styles.btn}
@@ -69,7 +119,7 @@ render() {
           <Text style={{fontWeight: 'bold', fontSize: 20}}>Join Room</Text>
         </TouchableOpacity>
 
-        </View>
+      </View>
 
       </View>
 
@@ -84,7 +134,7 @@ const styles = StyleSheet.create({
     fontSize: RFPercentage(9.5),
     fontWeight: 'bold',
     color: '#a78d8a',
-    padding: 40,
+    padding: 20,
   },
   btn: {
     // #daebe8
@@ -100,4 +150,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default StartScreen
+export default StartScreen;
