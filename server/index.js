@@ -6,6 +6,7 @@ var request = require('request');
 const yelp = require('yelp-fusion');
 const { Pool } = require('pg');
 const fs = require('fs');
+require('dotenv').config();
 
 //sessions expire after this amount of time (1 hour in milliseconds)
 const MAX_TIME = 3600000;
@@ -20,15 +21,23 @@ const status = { //TODO: indicator of if they agreed on a place or not? for anal
 const LEFT = 1;
 const RIGHT = 2;
 
+//TODO: deny clients who don't have the secret password
+//(https://stackoverflow.com/questions/13745519/send-custom-data-along-with-handshakedata-in-socket-io)
+
 //Google Places API key
-let apiKey = null;
-try {
+let apiKey = process.env.API_KEY;
+let serverPassword = process.env.SERVER_PASS;
+if (apiKey == null || serverPassword == null) {
+	throw new Error('Passwords are missing, make sure you have a .env file in this directory with API_KEY, SERVER_PASS, and DB_PASS');
+}
+/*try {
 	apiKey = fs.readFileSync('api.txt', 'utf8');
 	//console.log(apiKey);
+	serverPassword=fs.readFileSync('serverPass.txt','utf8');
 } catch (err) {
 	console.error(err);
 	console.log("(make sure you were in the 'server' directory when you launched node)");
-}
+}*/
 
 //Define the yelp api call (https://www.yelp.com/developers/documentation/v3/business_search)
 const apiCall = yelp.client(apiKey);
@@ -36,19 +45,15 @@ const apiCall = yelp.client(apiKey);
 //Decide if were using a dummy call or not (for development purposes)
 const dummyApi = false;
 
-let pass = null;
 let db = false;
-if (db) {
-	try {
-		pass = fs.readFileSync('pass.txt', 'utf8');
-		//console.log(pass);
-	} catch (err) {
-		console.error(err);
-		console.log("(make sure you were in the 'server' directory when you launched node)");
-	}
+let dbpass = process.env.DB_PASS;
+if (dbpass == null) {
+	console.log('No DB_PASS in .env file, not using database');
+	db=false;
+} else {
 	const pool = new Pool({
 		user: 'berger6',
-		password: pass,
+		password: dbpass,
 		host: 'csinparallel.cs.stolaf.edu',
 		database: 'mca_s20',
 		port: 5432
@@ -111,9 +116,18 @@ var rooms = {};
 
 	disconnect: user has disconnected, socket.io sends this automatically
 */
+io.use(function (socket, next) { //authenticate using a secret password and hope they can't look at this part of the source code
+	console.log("Query: ", socket.handshake.query);
+	if (socket.handshake.query.pass == serverPassword) {
+		return next();
+	}else{
+		console.log('Someone tried to connect to the server with the wrong password');
+		next(new Error('Authentication error'));
+	}
+})
 
 io.on('connection', (socket) => {
-	console.dir(socket);
+	//console.dir(socket);
 	console.log('user connected');
 	//start without a room by default. Also, users are only ever in one room at a time
 	socket.mainRoom = null;
@@ -425,6 +439,7 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {
+		console.log(response);
 		let ret = clean(response, rate);
 		console.log('room ' + id + ' has ' + ret.results.length + ' results');
 		rooms[id].results = ret;//remember it on the server
@@ -451,7 +466,7 @@ function clean(places, rating) {
 		let temp = {
 			//lat: cur.geometry.location.lat, //latitude
 			//lng: cur.geometry.location.lng, //longitude
-			id:i,
+			id: i,
 			distance: Math.round(10 * (cur.distance / 1609)) / 10,
 			name: cur.name, //place name
 			photo: cur.image_url,

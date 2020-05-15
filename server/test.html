@@ -20,7 +20,7 @@
 	<script>
 		let search_results = null;
 
-		var socket = io();
+		var socket = io({query: "pass=password"});
 
 		function createRoom(type) {
 			filters={
