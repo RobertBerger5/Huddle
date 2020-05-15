@@ -5,9 +5,6 @@ import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { Dropdown } from 'react-native-material-dropdown';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
-//import Icon from 'react-native-vector-icons/FontAwesome';
-//import { Icon } from 'react-native-elements'
-//import Icon from 'react-native-ionicons'
 
 import io from "socket.io-client";
 import socketIO from 'socket.io-client';
@@ -43,14 +40,6 @@ class FilterScreen extends React.Component {
       });
 
     }
-
-//   joinFunc = () => {
-//     alert("yooo");
-// }
-// setSelectedValue = (item) => {
-//   alert("item set");
-// }
-
 
 //Our main render
 render() {

@@ -8,7 +8,7 @@ import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Entypo';
 import Modal from 'react-native-modal';
-import CheckBox from 'react-native-check-box'
+import CheckBox from 'react-native-check-box';
 
 //'http://65.128.45.107:3000'
 //'http://192.168.0.44:3000'
@@ -41,7 +41,8 @@ class StartScreen extends React.Component {
 
       this.state ={
         isModalVisible: false,
-        isChecked: false
+        isChecked: false,
+        cardnum: ''
       }
   
     }
@@ -61,6 +62,18 @@ toggleModal = () => {
 //Our main render
 render() {
 
+
+  let cards = [{
+    value: '10',
+  },{
+    value: '20',
+  }, {
+    value: '30',
+  }, {
+    value: '40',
+  },{
+    value: '50',
+  }];
  // var isModalVisible = false;
     return (
 // FFE5CC
@@ -92,6 +105,15 @@ render() {
               isChecked={this.state.isChecked}
               />
               </View>
+
+              <Dropdown
+                //style={styles.drop}
+                style={{marginBottom: 20}}
+                label='Max Restaurants Shown'
+                data={cards}
+                defaultValue='10'
+                onChangeText = {cardnum => this.setState({cardnum})}
+              />
             <Button title="Close" onPress={this.toggleModal} color='#e18a7a' />
             </View>
           </View>
