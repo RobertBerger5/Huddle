@@ -44,7 +44,7 @@ const apiCall = yelp.client(apiKey);
 //Decide if were using a dummy call or not (for development purposes)
 const dummyApi = false;
 
-let db = true;
+let db = false;
 let dbpass = process.env.DB_PASS;
 let dbuser = process.env.DB_USER;
 let pool = null;
@@ -241,7 +241,8 @@ io.on('connection', (socket) => {
 
 	//API results returned to user, and they're making choices
 	socket.on('swipe', (locI, swipe) => {
-		//user swiped 0 or 1 (LEFT or RIGHT) on {results.candidates[locI]}
+		//user swiped 0 or 1 (LEFT or RIGHT) on {results.results[locI]}
+		//note: locI is the index of the location in results.results, and clients are sending the "id" parameter of the object, which is always the same as the index in results.results on the server-side, but the client shuffles them. If the id is ever not the same as the index, change parts of this function, but for now it's convenient for finding which location it is fast
 		let id = socket.mainRoom;
 		if (id == null) {
 			socket.emit('user_err', 'Cannot swipe without being in a room');
@@ -277,7 +278,15 @@ io.on('connection', (socket) => {
 			return;
 		}
 		console.log("user requested top results");
-		socket.emit('top_results', rooms[id].votes.sort(compareSwipes));
+		//TODO: don't display anything with more left than right, and display just the top 3
+		let topResults=rooms[id].votes.slice();
+		topResults.sort(compareSwipes);
+		//TODO: just send the top three results, or less if there are just less restaurants
+		if(topResults.length>3){
+			topResults=topResults.slice(0,3);
+		}
+		socket.emit('top_results', topResults);
+		//sends back an array of (at most) 3 arrays that look like this: [(location ID), (number of lefts), (number of rights)]
 	});
 });
 

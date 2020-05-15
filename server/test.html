@@ -95,6 +95,7 @@
 			log('swiped on ' + id + ', safe to remove from pile', '#6f6');
 		});
 		socket.on('top_results', (top) => {
+			console.log(top);
 			top_results = top;
 			log('(got top results, see top_results to view)', '#afa');
 		});
