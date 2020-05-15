@@ -21,14 +21,13 @@ const status = { //TODO: indicator of if they agreed on a place or not? for anal
 const LEFT = 1;
 const RIGHT = 2;
 
-//TODO: deny clients who don't have the secret password
-//(https://stackoverflow.com/questions/13745519/send-custom-data-along-with-handshakedata-in-socket-io)
+//TODO: SECURE SOMEHOW (either log IP's of whoever happens to write a client for this, or somehow go through the google play store and apple app store to make sure they're in our client app??)
+//I think just sanitize the hell out of user inputs, then log IP's for spamming and stop them at the io.use function
 
 //Google Places API key
 let apiKey = process.env.API_KEY;
-let serverPassword = process.env.SERVER_PASS;
-if (apiKey == null || serverPassword == null) {
-	throw new Error('Passwords are missing, make sure you have a .env file in this directory with API_KEY, SERVER_PASS, and DB_PASS');
+if (apiKey == null) {
+	throw new Error('API key missing, make sure you have a .env file in this directory with API_KEY, SERVER_PASS, and DB_PASS. Also be sure you are in the "server" directory');
 }
 /*try {
 	apiKey = fs.readFileSync('api.txt', 'utf8');
@@ -45,26 +44,28 @@ const apiCall = yelp.client(apiKey);
 //Decide if were using a dummy call or not (for development purposes)
 const dummyApi = false;
 
-let db = false;
+let db = true;
 let dbpass = process.env.DB_PASS;
+let dbuser = process.env.DB_USER;
+let pool = null;
 if (dbpass == null) {
-	console.log('No DB_PASS in .env file, not using database');
-	db=false;
+	console.log('DB_PASS or DB_USER missing in .env file, not using database');
+	db = false;
 } else {
-	const pool = new Pool({
-		user: 'berger6',
+	pool = new Pool({
+		user: dbuser,
 		password: dbpass,
 		host: 'csinparallel.cs.stolaf.edu',
 		database: 'mca_s20',
 		port: 5432
 	});
 	pool.on('connect', client => {
-		client.query(`SET search_path=berger6,public;`);
-		console.log("connected to db");
+		client.query('SET search_path=mca_s20_repo,' + dbuser + ',public;');
 	});
 	pool.on('error', (err, client) => {
 		console.error('Unexpected error on idle client', err);
 	});
+	console.log("using database");
 }
 
 //don't need this with React-Native, but it really helps with testing
@@ -117,10 +118,10 @@ var rooms = {};
 	disconnect: user has disconnected, socket.io sends this automatically
 */
 io.use(function (socket, next) { //authenticate using a secret password and hope they can't look at this part of the source code
-	console.log("Query: ", socket.handshake.query);
-	if (socket.handshake.query.pass == serverPassword) {
+	//console.log("Query: ", socket.handshake.query);
+	if (true || socket.handshake.query.pass == serverPassword) {
 		return next();
-	}else{
+	} else {
 		console.log('Someone tried to connect to the server with the wrong password');
 		next(new Error('Authentication error'));
 	}
@@ -234,6 +235,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('disconnect', () => {
+		console.log('user disconnected');
 		leaveRoom(socket);
 	});
 
@@ -311,6 +313,9 @@ function leaveRoom(socket) {
 	if (rooms[id].people <= 0) { //("<" shouldn't be necessary, but just in case)
 		//no one left, get rid of the empty room
 		if (db) {
+			if(rooms[id].results==null){
+				return;
+			}
 			//BUT FIRST! note some analytical data in the database!
 			let currTime = Date.now() % MAX_TIME;
 			let duration = (currTime - parseInt(id, 36)) % MAX_TIME; //how long it was in ms
@@ -325,11 +330,11 @@ function leaveRoom(socket) {
 			let rate = 1; //rating of restaurants, from 1-5 (I think)
 			let price = 1; //$, $$, or $$$
 			pool.query('INSERT INTO use_info (duration,status,people,lat,lng,places_found,type,range,rate,price) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [duration, status, people, lat, lng, places_found, type, range, rate, price]).then(res => {
-				console.log('DB response: ' + res.rows[0]);
-			}).catch(err =>
-				setImmediate(() => {
-					throw err;
-				}));
+				console.log("(logged results from "+id+" to DB)");
+			}).catch(err =>{
+				console.log("DB ERROR: ");
+				console.log(err);
+			});
 			/*for reference, here's how the table was created:
 			CREATE TABLE use_info (
 				id serial PRIMARY KEY,
@@ -439,7 +444,7 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {
-		console.log(response);
+		//console.log(response);
 		let ret = clean(response, rate);
 		console.log('room ' + id + ' has ' + ret.results.length + ' results');
 		rooms[id].results = ret;//remember it on the server
@@ -448,7 +453,9 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 		io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
 		//console.log(ret);
 	}).catch(e => {
+		console.log("API CALL ERROR: ");
 		console.log(e);
+		socket.emit('user_err','Something went wrong, please try again');
 	});
 }
 

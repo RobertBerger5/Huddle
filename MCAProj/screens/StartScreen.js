@@ -24,7 +24,7 @@ class StartScreen extends React.Component {
       super(props);
      // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
-        query:'pass=password',  
+        //query:'pass=password',  
         transports: ['websocket'], jsonp: false 
       });
 
