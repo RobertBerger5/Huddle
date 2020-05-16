@@ -21,8 +21,7 @@ const status = { //TODO: indicator of if they agreed on a place or not? for anal
 const LEFT = 1;
 const RIGHT = 2;
 
-//TODO: SECURE SOMEHOW (either log IP's of whoever happens to write a client for this, or somehow go through the google play store and apple app store to make sure they're in our client app??)
-//I think just sanitize the hell out of user inputs, then log IP's for spamming and stop them at the io.use function
+//TODO: make sure user inputs are sanatized, especially anything/combo that could crash the server, then log IP's for spamming and stop them at the io.use function. Maybe even put them in a more permanent blacklist.txt file to remember not to let em in even through server restarts.
 
 //Google Places API key
 let apiKey = process.env.API_KEY;
