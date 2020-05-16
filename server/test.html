@@ -50,6 +50,9 @@
 		}
 
 
+		socket.on('disconnect',()=>{
+			log("DISCONNECTED","red");
+		});
 		socket.on('user_err', (msg) => {
 			log(msg, "red");
 		});
