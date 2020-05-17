@@ -45,7 +45,9 @@ let db = false;
 let dbpass = process.env.DB_PASS;
 let dbuser = process.env.DB_USER;
 let pool = null;
-if (dbpass == null) {
+if(!db){
+	//go through without complaint
+}else if (dbpass == null) {
 	console.log('DB_PASS or DB_USER missing in .env file, not using database');
 	db = false;
 } else {
@@ -79,15 +81,15 @@ app.get('/hack/', (req, res) => {
 */
 
 var blacklist = {}; //deny these IP's
-try{
+try {
 	//synchronous because we want to do this at startup before starting to listen
-	let ips=fs.readFileSync('blacklist.txt','utf8').split('\n');
-	for(ip of ips){
+	let ips = fs.readFileSync('blacklist.txt', 'utf8').split('\n');
+	for (ip of ips) {
 		//add them to dictionary
-		blacklist[ip]=null;
+		blacklist[ip] = null;
 	}
-}catch(e){
-	console.log('Error reading blacklist.txt: ',e.stack);
+} catch (e) {
+	console.log('Error reading blacklist.txt: ', e.stack);
 	console.log('Note: this error will come up on server startup until someone gets themselves blacklisted');
 }
 console.log("Blacklisted IP's loaded: ");
@@ -95,15 +97,15 @@ console.log(blacklist);
 
 /*global hash map to detect spammers, key=ip, */
 var ipInfo = {};
-function strike(socket,ip) {
+function strike(socket, ip) {
 	socket.disconnect();
 	console.log(ip + " is spamming, disconnected");
-	if(++ipInfo[ip].strikes>=3){
+	if (++ipInfo[ip].strikes >= 3) {
 		//add ip to blacklisted users dictionary
-		blacklist[ip]=null;
+		blacklist[ip] = null;
 		//and to blacklist.txt
-		fs.appendFile('blacklist.txt',(ip)+'\n',(e)=>{
-			if(e){
+		fs.appendFile('blacklist.txt', (ip) + '\n', (e) => {
+			if (e) {
 				throw e;
 			}
 			console.log('IP added to blacklist.txt');
@@ -130,7 +132,7 @@ var rooms = {};
 	leave_ack: all clear, user has left succesfully (no string sent with it)
 	other_left: notification that someone else left, sends number of people in room now
 	started: all clear, begin swiping (no string sent with it)
-	ended: an hour has passed and the room has closed, everyone will be booted (can't figure out how to do that server-side, so politely request that the client boot themselves)
+	ended: an hour has passed and the room has closed, everyone will be booted
 	results: results from API call, sent ASAP on create or join
 	swipe_ack: swipe successful, take that restaurant out of the pile
 	top_results: sorted top results, as requested (array of 3-long arrays)
@@ -149,7 +151,7 @@ var rooms = {};
 */
 io.use(function (socket, next) { //authenticate using a secret password and hope they can't look at this part of the source code
 	//console.log("Query: ", socket.handshake.query);
-	let ip=socket.request.connection.remoteAddress;
+	let ip = socket.request.connection.remoteAddress;
 	if (ip in blacklist) {
 		console.log('Blacklisted user tried to connect');
 		next(new Error('USER IS BLACKLISTED'));
@@ -160,7 +162,6 @@ io.use(function (socket, next) { //authenticate using a secret password and hope
 
 io.on('connection', (socket) => {
 	//console.dir(socket);
-	console.log('user connected');
 	//start without a room by default. Also, users are only ever in one room at a time
 	socket.mainRoom = null;
 
@@ -171,7 +172,9 @@ io.on('connection', (socket) => {
 			strikes: 0
 		}
 	}
-	console.log(ipInfo[ip])
+	//console.log(ipInfo[ip])
+
+	console.log('user with '+ipInfo[ip].strikes+' strikes connected');
 
 	//request to create a room
 	socket.on('create', (filters) => {
@@ -208,11 +211,17 @@ io.on('connection', (socket) => {
 		setTimeout(() => {
 			if (id in rooms) {
 				io.to(id).emit('ended');
-				//TODO: figure out how to boot em all
-				//delete rooms[id];
-				//console.log("deleting room " + id);
+				try {
+					console.log("time limit exceeded for room " + id);
+					//kick everyone out
+					for (s in io.sockets.adapter.rooms[id].sockets) {
+						console.log(s);
+						leaveRoom(io.sockets.sockets[s]);
+					}
+				} catch (e) {
+					console.err(e);
+				}
 			}
-			console.log("time limit exceeded for room " + id + ", everyone booted (boot themselves)");
 		}, MAX_TIME);
 		try {
 			//SEARCH for the API call
@@ -231,7 +240,7 @@ io.on('connection', (socket) => {
 			ipInfo[ip].joins--;
 		}, 1000);
 		if (ipInfo[ip].joins > 25) {
-			strike(socket,ip);
+			strike(socket, ip);
 			return;
 		}
 
@@ -250,6 +259,7 @@ io.on('connection', (socket) => {
 		}
 
 		socket.join(id);//subscribe to socket.io room
+		//console.dir(io.sockets.adapter.rooms);
 		socket.mainRoom = id;//so we know which room they belong to
 		rooms[id].people++;//one more person in
 		if (rooms[id].people > rooms[id].maxPeople) {
