@@ -350,7 +350,7 @@ io.on('connection', (socket) => {
 });
 
 //open port
-http.listen(3000, () => {
+http.listen(3000, "0.0.0.0", () => {
 	console.log('listening on *:3000');
 });
 
