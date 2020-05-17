@@ -5,6 +5,36 @@ import { SafeAreaView } from 'react-navigation'
 import { TopPicksScreenPics } from '../constants/Restaurants'
 
 class TopPicksScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    const result = props.result;
+    const socket = props.socket;
+    var index = props.index;
+
+    this.socket = socket;
+    this.result = result;
+
+    this.state = {
+      top_results: [],
+    };
+    //example results console.log();
+    //onsole.log(result);
+  }
+
+  componentDidMount() {
+    this.socket.on('top_results', (top_results) => {
+      this.setState({ top_results });
+      console.log("Logging top picks");
+      console.log(this.state.top_results);
+    });
+
+    this.socket.emit('request_top_results');
+  }
+
+  componentWillUnmount() {
+    this.socket.off('top_results');
+  }
+
   render() {
     return (
       <SafeAreaView>

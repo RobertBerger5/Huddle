@@ -27,8 +27,8 @@ class StartScreen extends React.Component {
       super(props);
      // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
-        //query:'pass=password',  
-        transports: ['websocket'], jsonp: false 
+        //query:'pass=password',
+        transports: ['websocket'], jsonp: false
       });
 
       this.socket.connect();
@@ -52,7 +52,7 @@ class StartScreen extends React.Component {
         isChecked: false,
         cardnum: ''
       }
-  
+
     }
 
   joinFunc = () => {
@@ -96,8 +96,8 @@ render() {
           size={35}
          onPress={this.toggleModal}></Icon>
         {/* onPress={() => this.setState({isModalVisible: true})}></Icon> */}
-        
-        <Modal 
+
+        <Modal
         isVisible={this.state.isModalVisible}
         deviceWidth={width}
         deviceHeight={height}
@@ -108,7 +108,7 @@ render() {
             <View style={{ flexDirection: 'row', justifyContent: 'center',  alignItems: 'center'}}>
             <Text style={{color: '#a78d8a', fontSize: RFPercentage(3)}}>Wheelchair Accessible</Text>
             <CheckBox
-              style={{flex: 1, padding: 10, margin: 10, color:'#a78d8a' }}
+              style={{flex: 1, padding: 10, margin: 10, }}
               onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
               isChecked={this.state.isChecked}
               />
