@@ -90,6 +90,7 @@ try{
 	console.log('Error reading blacklist.txt: ',e.stack);
 	console.log('Note: this error will come up on server startup until someone gets themselves blacklisted');
 }
+console.log("Blacklisted IP's loaded: ");
 console.log(blacklist);
 
 /*global hash map to detect spammers, key=ip, */
@@ -507,12 +508,13 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
+		//TODO: search the specific business to get more than one photo for each restaurant
+		//https://www.yelp.com/developers/documentation/v3/business
 		io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
-		//console.log(ret);
 	}).catch(e => {
 		console.log("API CALL ERROR: ");
 		console.log(e);
-		socket.emit('user_err', 'Something went wrong, please try again');
+		socket.emit('user_err', 'Something went wrong, try again later');
 	});
 }
 
