@@ -62,6 +62,7 @@ render() {
           onPress =  {() => this.socket.emit('start')}>
           <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start</Text>
         </TouchableOpacity>
+        {/*<Text style={{fontSize:12,textAlign:'center'}}>(Make sure your friends are all in before starting)</Text>*/}
         <Text style={styles.appName}>Total People in Room:</Text>
         <Text style={styles.appName}>{this.state.names}</Text>
         {/* <TouchableOpacity
