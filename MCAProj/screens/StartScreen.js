@@ -16,7 +16,7 @@ import CheckBox from 'react-native-check-box';
 
 //official server: 'http://161.35.54.15:3000'
 
-const serverip = 'http://192.168.0.17:3000';
+const serverip = 'http://161.35.54.15:3000';
 
 var {height, width} = Dimensions.get('window');
 
