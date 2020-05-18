@@ -1,10 +1,26 @@
 
 import React from 'react'
-import { Platform, StyleSheet } from 'react-native'
+import { Platform, StyleSheet, Image, View } from 'react-native'
 import { Tile } from 'react-native-elements'
 import Layout from '../constants/Layout'
+//import {Image, Tile} from '@shoutem/ui'
 
 const BOTTOM_BAR_HEIGHT = !Platform.isPad ? 29 : 49 // found from https://stackoverflow.com/a/50318831/6141587
+
+/*
+<View>
+  <Image
+    style={{
+      flex: 1,
+      height: null,
+      width: null,
+      resizeMode: "cover",
+      borderRadius: 35
+    }}
+    source={{uri: photo}}
+  />
+</View>
+*/
 
 export const Card = ({ photo, name, price_level }) => (
   <Tile

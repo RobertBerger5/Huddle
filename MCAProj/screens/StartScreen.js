@@ -11,15 +11,14 @@ import Modal from 'react-native-modal';
 import CheckBox from 'react-native-check-box';
 
 //'http://65.128.45.107:3000'
-//'http://192.168.0.44:3000'
+//'http://192.168.0.17:3000'
 //'http://173.28.80.230:3000'
 
 //official server: 'http://161.35.54.15:3000'
 
-const serverip = 'http://161.35.54.15:3000';
+const serverip = 'http://192.168.0.17:3000';
 
 var {height, width} = Dimensions.get('window');
-
 
 class StartScreen extends React.Component {
     //Default constructor
