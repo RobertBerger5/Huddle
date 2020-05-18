@@ -42,7 +42,7 @@ class StartScreen extends React.Component {
       this.state ={
         isModalVisible: false,
         isChecked: false,
-        cardnum: ''
+        cardnum: '50', 
       }
   
     }
@@ -100,7 +100,7 @@ render() {
             <View style={{ flexDirection: 'row', justifyContent: 'center',  alignItems: 'center'}}>
             <Text style={{color: '#a78d8a', fontSize: RFPercentage(3)}}>Wheelchair Accessible</Text>
             <CheckBox
-              style={{flex: 1, padding: 10, margin: 10, color:'#a78d8a' }}
+              style={{flex: 1, padding: 10, margin: 10}}
               onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
               isChecked={this.state.isChecked}
               />
@@ -130,7 +130,7 @@ render() {
         {/* Start Game button */}
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('Filter', {socket: this.socket})}>
+          onPress =  {() => this.props.navigation.navigate('Filter', {socket: this.socket, cardnum: this.state.cardnum, access: this.state.isChecked})}>
           <Text style={{fontWeight: 'bold',  fontSize: 20}}>Create Room</Text>
         </TouchableOpacity>
 

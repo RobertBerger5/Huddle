@@ -32,6 +32,13 @@ class FilterScreen extends React.Component {
       //initialize sockets passed from props
       const { socket } = this.props.route.params;
       this.socket = socket;
+      
+      //parameter for settings
+      const { cardnum } = this.props.route.params;
+      this.cardnum = cardnum;
+
+      const { access } = this.props.route.params;
+      this.access = access;
 
       //Listen for succesful creation
       this.socket.on('created',(id)=>{
@@ -147,7 +154,9 @@ render() {
               lat: this.state.lat,
               range: this.state.range,
               rate: this.state.rate,
-              price: this.state.price
+              price: this.state.price,
+              cardnum: this.cardnum,
+              access: this.access
             });
           }}>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Next</Text>
