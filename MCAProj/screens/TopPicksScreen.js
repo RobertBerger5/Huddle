@@ -35,7 +35,26 @@ class TopPicksScreen extends React.Component {
     this.socket.off('top_results');
   }
 
+
   render() {
+    var tiles = [];
+    let i = 0;
+    while(this.state.top_results[i]){
+      tiles.push(
+        <Tile
+        imageSrc={{uri:this.result.results[ this.state.top_results[i][0] ].photo}}
+        activeOpacity={0.9}
+        title={this.result.results[ this.state.top_results[i][0] ].name}
+        titleStyle={styles.title}
+        caption={this.result.results[ this.state.top_results[i][0] ].price_level}
+        captionStyle={styles.caption}
+        featured
+      />
+      )
+      i++;
+
+    }
+
     return (
       <SafeAreaView>
         <ScrollView>
@@ -46,18 +65,8 @@ class TopPicksScreen extends React.Component {
             The restaurants you and your friends like the most
           </Text>
           <View style={styles.grid}>
-            {TopPicksScreenPics.map(({ pic, title, caption }, i) => (
-              <Tile
-                imageSrc={pic}
-                activeOpacity={0.9}
-                title={title}
-                titleStyle={styles.title}
-                caption={caption}
-                captionStyle={styles.caption}
-                featured
-                key={title}
-              />
-            ))}
+          {tiles}
+  
           </View>
         </ScrollView>
       </SafeAreaView>
