@@ -26,8 +26,10 @@ class HomeScreen extends React.Component {
           infinite
           backgroundColor="white"
           cardHorizontalMargin={0}
-          stackSize={2}
+          stackSize={3}
+          animateCardOpacity
           animateOverlayLabelsOpacity
+          showSecondCard
           overlayLabels= {{
             left: {
             element: <Entypo name="thumbs-down" color= 'red' size={65} />,
