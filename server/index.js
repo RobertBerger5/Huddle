@@ -176,7 +176,7 @@ io.on('connection', (socket) => {
 		}, MAX_TIME);
 		try {
 			//SEARCH for the API call
-			getResults(id, socket, filters.type, filters.long, filters.lat, filters.range, filters.rate, filters.price); //emits 'results' with API results back to room creator
+			getResults(id, socket, filters.type, filters.long, filters.lat, filters.range, filters.rate, filters.price, filters.cardnum, filters.access); //emits 'results' with API results back to room creator
 		} catch (err) {
 			console.log(err);
 			console.log("User probably gave weird filters");
@@ -362,7 +362,7 @@ function leaveRoom(socket) {
 }
 
 //get results rooms[id].type, rooms[id].long, rooms[id].lat, rooms[id].range, rooms[id].rate, rooms[id].price
-function getResults(id, socket, type, long, lat, range, rate, price) {
+function getResults(id, socket, type, long, lat, range, rate, price, cardnum, access) {
 
 	if (dummyApi) {
 		rooms[id].results = makeDummyCall();
@@ -372,15 +372,25 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 		return;
 	}
 
+	//let attrs = '';
+
+	// if(access){
+	// 	//attrs = 'wheelchair_accessible';
+	// }
+
 	//Build the yelp search request
 	let searchRequest = {
 		term: type,
 		latitude: lat,
 		longitude: long,
 		open_now: true,
-		limit: 50,
 	};
 
+	if(access){
+		searchRequest.attributes = 'wheeechair_accessible';
+	}
+
+console.log('limit is: ' + cardnum);
 	//TODO: change these to just be numbers instead
 	switch (price) {
 		case '$':
@@ -439,6 +449,25 @@ function getResults(id, socket, type, long, lat, range, rate, price) {
 		case 'Any':
 		default:
 			rate = 0;
+			break;
+	}
+
+	///for the number of cards declared in settings
+	switch (cardnum) {
+		case '10':
+			searchRequest.limit= 10;
+			break;
+		case '20':
+			searchRequest.limit= 20;
+			break;
+		case '30':
+			searchRequest.limit= 30;
+			break;
+		case '40':
+			searchRequest.limit= 40;
+		case '50':
+		default:
+			searchRequest.limit = 50;
 			break;
 	}
 
