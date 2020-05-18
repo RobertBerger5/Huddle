@@ -1,9 +1,10 @@
 import React from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import Swiper from 'react-native-deck-swiper'
-import { Card } from '../components/Card'
+import Card from '../components/Card'
 import { HomeScreenPics } from '../constants/Restaurants'
 import Entypo from 'react-native-vector-icons/Entypo';
+import { createStackNavigator } from '@react-navigation/stack';
 
 
 class HomeScreen extends React.Component {
@@ -11,6 +12,7 @@ class HomeScreen extends React.Component {
     super(props);
     const result = props.result;
     const socket = props.socket;
+    const navigation = props.navigation;
     var index = props.index;
     //example results console.log();
     //console.log(result);
@@ -23,7 +25,7 @@ class HomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <Swiper
           cards={this.props.result.results}
-          renderCard={Card}
+          renderCard={card => <Card card={card} />}
           cardIndex = {global.index}
           infinite = {false}
           backgroundColor="white"
@@ -53,8 +55,8 @@ class HomeScreen extends React.Component {
                   flexDirection: 'column',
                   alignItems: 'flex-end',
                   justifyContent: 'flex-start',
-                  marginTop: 30,
-                  marginLeft: -30
+                  paddingRight: 20,
+                  padding: 10
                 }
               }
             },
@@ -74,8 +76,8 @@ class HomeScreen extends React.Component {
                   flexDirection: 'column',
                   alignItems: 'flex-start',
                   justifyContent: 'flex-start',
-                  marginTop: 30,
-                  marginLeft: 30
+                  paddingLeft: 20,
+                  padding: 10
                 }
               }
             }
