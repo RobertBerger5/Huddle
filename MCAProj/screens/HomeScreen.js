@@ -13,7 +13,8 @@ class HomeScreen extends React.Component {
     const socket = props.socket;
     var index = props.index;
     //example results console.log();
-    //onsole.log(result);
+    //console.log(result);
+    this.socket = socket;
   }
 
 
@@ -23,13 +24,18 @@ class HomeScreen extends React.Component {
         <Swiper
           cards={this.props.result.results}
           renderCard={Card}
-          infinite
+          cardIndex = {global.index}
+          infinite = {false}
           backgroundColor="white"
           cardHorizontalMargin={0}
-          stackSize={2}
+          stackSize={3} //TODO: check if this is right?
           animateCardOpacity
           animateOverlayLabelsOpacity
           showSecondCard
+          disableTopSwipe = {true}
+          disableBottomSwipe = {true}
+          onSwipedLeft = {(index) => {this.socket.emit('swipe', index, 1); global.index = index + 1;}}
+          onSwipedRight = {(index) => {this.socket.emit('swipe', index, 2); global.index = index + 1;}}
           overlayLabels= {{
             left: {
             element: <Entypo name="thumbs-down" color= 'red' size={65} />,
@@ -92,6 +98,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+    padding: 10
   },
 })
 

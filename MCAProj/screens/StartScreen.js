@@ -11,7 +11,7 @@ import Modal from 'react-native-modal';
 import CheckBox from 'react-native-check-box';
 
 //'http://65.128.45.107:3000'
-//'http://192.168.0.44:3000'
+//'http://192.168.0.17:3000'
 //'http://173.28.80.230:3000'
 
 //official server: 'http://161.35.54.15:3000'
@@ -20,15 +20,14 @@ const serverip = 'http://161.35.54.15:3000';
 
 var {height, width} = Dimensions.get('window');
 
-
 class StartScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
      // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
-        //query:'pass=password',  
-        transports: ['websocket'], jsonp: false 
+        //query:'pass=password',
+        transports: ['websocket'], jsonp: false
       });
 
       this.socket.connect();
@@ -52,7 +51,9 @@ class StartScreen extends React.Component {
         isChecked: false,
         cardnum: ''
       }
-  
+
+      global.index = 0;
+
     }
 
   joinFunc = () => {
@@ -96,8 +97,8 @@ render() {
           size={35}
          onPress={this.toggleModal}></Icon>
         {/* onPress={() => this.setState({isModalVisible: true})}></Icon> */}
-        
-        <Modal 
+
+        <Modal
         isVisible={this.state.isModalVisible}
         deviceWidth={width}
         deviceHeight={height}
@@ -108,7 +109,7 @@ render() {
             <View style={{ flexDirection: 'row', justifyContent: 'center',  alignItems: 'center'}}>
             <Text style={{color: '#a78d8a', fontSize: RFPercentage(3)}}>Wheelchair Accessible</Text>
             <CheckBox
-              style={{flex: 1, padding: 10, margin: 10, color:'#a78d8a' }}
+              style={{flex: 1, padding: 10, margin: 10, }}
               onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
               isChecked={this.state.isChecked}
               />

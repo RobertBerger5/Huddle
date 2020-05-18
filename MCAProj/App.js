@@ -45,7 +45,7 @@ function MyTabs(props) {
 
       />
 
-      <Tab.Screen name="Top Picks" component={TopPicksScreen}
+      <Tab.Screen name="Top Picks" component={ () => <TopPicksScreen result = {result} socket = {socket} index = {index}/>}
               options={{
                 tabBarLabel: 'Top Picks',
                 tabBarIcon: ({ color, size }) => (
