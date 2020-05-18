@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     color: 'white',
-    fontFamily: 'Avenir',
     textShadowColor: 'black',
     textShadowRadius: 10,
   },
