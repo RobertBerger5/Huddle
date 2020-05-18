@@ -15,8 +15,6 @@ class TopPicksScreen extends React.Component {
     this.socket = socket;
     this.result = result;
 
-    console.log(this.result.results);
-
     this.state = {
       top_results: [],
     };

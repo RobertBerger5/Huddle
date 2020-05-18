@@ -28,7 +28,7 @@ class HomeScreen extends React.Component {
           infinite = {false}
           backgroundColor="white"
           cardHorizontalMargin={0}
-          stackSize={3}
+          stackSize={3} //TODO: check if this is right?
           animateCardOpacity
           animateOverlayLabelsOpacity
           showSecondCard
