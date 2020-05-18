@@ -1,6 +1,6 @@
 
 import React from 'react'
-import { Platform, StyleSheet, Image, View } from 'react-native'
+import { Platform, StyleSheet, Image, View, Dimensions } from 'react-native'
 import { Tile } from 'react-native-elements'
 import Layout from '../constants/Layout'
 //import {Image, Tile} from '@shoutem/ui'
@@ -15,11 +15,26 @@ const BOTTOM_BAR_HEIGHT = !Platform.isPad ? 29 : 49 // found from https://stacko
       height: null,
       width: null,
       resizeMode: "cover",
-      borderRadius: 35
+      borderRadius: 35,
+      justifyContent: 'center'
     }}
     source={{uri: photo}}
   />
 </View>
+
+
+<Image
+  style={{
+    flex: 1,
+    height: null,
+    width: Layout.window.width - 30,
+    resizeMode: "cover",
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }}
+  source={{uri: photo}}
+/>
 */
 
 export const Card = ({ photo, name, price_level }) => (

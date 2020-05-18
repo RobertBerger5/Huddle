@@ -36,6 +36,7 @@ class HomeScreen extends React.Component {
           disableBottomSwipe = {true}
           onSwipedLeft = {(index) => {this.socket.emit('swipe', index, 1); global.index = index + 1;}}
           onSwipedRight = {(index) => {this.socket.emit('swipe', index, 2); global.index = index + 1;}}
+          cardStyle={{justifyContent: 'center', alignItems: 'center'}}
           overlayLabels= {{
             left: {
             element: <Entypo name="thumbs-down" color= 'red' size={65} />,

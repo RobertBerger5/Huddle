@@ -38,8 +38,14 @@ class TopPicksScreen extends React.Component {
     this.socket.off('top_results');
   }
 
-  tileOnPress(lat, lng) {
+  /*tileOnPress(lat, lng) {
     openMap({ latitude: lat, longitude: lng, zoom: 18 });
+  }
+  ()) => this.tileOnPress(lat, lng)
+  */
+
+  tileOnPress(address) {
+    openMap({ end: address });
   }
 
   render() {
@@ -48,6 +54,7 @@ class TopPicksScreen extends React.Component {
     while(this.state.top_results[i]){
       let lat = this.result.results[ this.state.top_results[i][0] ].lat;
       let lng = this.result.results[ this.state.top_results[i][0] ].lng;
+      let address = this.result.results[ this.state.top_results[i][0] ].address;
       tiles.push(
         <Tile
         imageSrc={{uri:this.result.results[ this.state.top_results[i][0] ].photo}}
@@ -57,7 +64,7 @@ class TopPicksScreen extends React.Component {
         caption={this.result.results[ this.state.top_results[i][0] ].price_level}
         captionStyle={styles.caption}
         featured
-        onPress = {() => this.tileOnPress(lat, lng)}
+        onPress = {() => this.tileOnPress(address)}
       />
       )
       i++;

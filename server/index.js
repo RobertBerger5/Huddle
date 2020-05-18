@@ -542,6 +542,7 @@ function clean(places, rating) {
 		let temp = {
 			lat: cur.coordinates.latitude, //latitude
 			lng: cur.coordinates.longitude, //longitude
+			address: cur.location.display_address[0] + ", " + cur.location.display_address[1],
 			id: i,
 			distance: Math.round(10 * (cur.distance / 1609)) / 10,
 			name: cur.name, //place name
