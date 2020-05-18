@@ -53,6 +53,8 @@ class StartScreen extends React.Component {
         cardnum: ''
       }
 
+      global.index = 0;
+
     }
 
   joinFunc = () => {

@@ -540,8 +540,8 @@ function clean(places, rating) {
 		let cur = places.jsonBody.businesses[i];
 		//Our temp to push to our ret array
 		let temp = {
-			//lat: cur.geometry.location.lat, //latitude
-			//lng: cur.geometry.location.lng, //longitude
+			lat: cur.coordinates.latitude, //latitude
+			lng: cur.coordinates.latitude, //longitude
 			id: i,
 			distance: Math.round(10 * (cur.distance / 1609)) / 10,
 			name: cur.name, //place name
