@@ -452,6 +452,7 @@ function getResults(id, socket, type, long, lat, range, rate, price, cardnum, ac
 		latitude: lat,
 		longitude: long,
 		open_now: true,
+		limit: 10
 	};
 
 	if(access){
@@ -521,23 +522,23 @@ console.log('limit is: ' + cardnum);
 	}
 
 	///for the number of cards declared in settings
-	switch (cardnum) {
-		case '10':
-			searchRequest.limit= 10;
-			break;
-		case '20':
-			searchRequest.limit= 20;
-			break;
-		case '30':
-			searchRequest.limit= 30;
-			break;
-		case '40':
-			searchRequest.limit= 40;
-		case '50':
-		default:
-			searchRequest.limit = 50;
-			break;
-	}
+	// switch (cardnum) {
+	// 	case '10':
+	// 		searchRequest.limit= 10;
+	// 		break;
+	// 	case '20':
+	// 		searchRequest.limit= 20;
+	// 		break;
+	// 	case '30':
+	// 		searchRequest.limit= 30;
+	// 		break;
+	// 	case '40':
+	// 		searchRequest.limit= 40;
+	// 	case '50':
+	// 	default:
+	// 		searchRequest.limit = 50;
+	// 		break;
+	// }
 
 	//Yelp api call
 	apiCall.search(searchRequest).then(response => {

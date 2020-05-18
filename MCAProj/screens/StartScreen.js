@@ -9,6 +9,7 @@ import socketIO from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Entypo';
 import Modal from 'react-native-modal';
 import CheckBox from 'react-native-check-box';
+// import { useState } from 'react';
 
 //'http://65.128.45.107:3000'
 //'http://192.168.0.17:3000'
@@ -19,6 +20,8 @@ import CheckBox from 'react-native-check-box';
 const serverip = 'http://161.35.54.15:3000';
 
 var {height, width} = Dimensions.get('window');
+
+// const [check, setCheck] = useState(false);
 
 class StartScreen extends React.Component {
     //Default constructor
@@ -113,6 +116,11 @@ render() {
               onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
               isChecked={this.state.isChecked}
               />
+              {/* <CheckBox
+              style={{flex: 1, padding: 10, margin: 10}}
+              onClick={()=> setCheck(!check)}
+              isChecked={check}
+              /> */}
               </View>
 
               <Dropdown

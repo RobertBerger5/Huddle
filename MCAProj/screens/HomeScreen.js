@@ -5,6 +5,9 @@ import Card from '../components/Card'
 import { HomeScreenPics } from '../constants/Restaurants'
 import Entypo from 'react-native-vector-icons/Entypo';
 import { createStackNavigator } from '@react-navigation/stack';
+import { BackHandler , StackActions} from 'react-native';
+import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
+
 
 
 class HomeScreen extends React.Component {
@@ -17,12 +20,75 @@ class HomeScreen extends React.Component {
     //example results console.log();
     //console.log(result);
     this.socket = socket;
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+
+    //this.props.navigation.pop(3);
   }
 
 
+  componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
+
+    handleBackButtonClick() {
+     // this.props.navigation.dispatch(StackActions.popToTop());
+        //this.props.navigation.navigate('Start');
+        //this.props.navigation.pop(3);
+        // navigation.reset({
+        //   index: 0,
+        //   routes: [{ name: 'Start' }],
+        // });
+        return true;
+        }
+
+    onSwipeRight() {
+      //this.props.navigation.dispatch(StackActions.popToTop());
+     // navigation.navigate('Start');
+    // this.setState({myText: 'You swiped right!'});
+   // alert('goback');
+      // navigation.reset({
+      //     index: 0,
+      //     routes: [{ name: 'Start' }],
+      //   });
+    }
+
   render() {
+
+    const config = {
+      velocityThreshold: 0.3,
+      directionalOffsetThreshold: 80
+    };
     return (
+      // <GestureRecognizer
+      // // onSwipe={(direction, state) => this.onSwipe(direction, state)}
+      // // onSwipeUp={(state) => this.onSwipeUp(state)}
+      // // onSwipeDown={(state) => this.onSwipeDown(state)}
+      // // onSwipeLeft={(state) => this.onSwipeLeft(state)}
+      // onSwipeRight={() => this.onSwipeRight()}
+      // config={config}
+      // style={{
+      //   flex: 1,
+      //   backgroundColor: 'transparent'
+      // }}
+      // >
       <SafeAreaView style={styles.container}>
+
+      {/* <GestureRecognizer
+        // onSwipe={(direction, state) => this.onSwipe(direction, state)}
+        // onSwipeUp={(state) => this.onSwipeUp(state)}
+        // onSwipeDown={(state) => this.onSwipeDown(state)}
+        // onSwipeLeft={(state) => this.onSwipeLeft(state)}
+        onSwipeRight={() => this.onSwipeRight()}
+        config={config}
+        style={{
+          flex: 1,
+          backgroundColor: 'transparent'
+        }}
+        > */}
         <Swiper
           cards={this.props.result.results}
           renderCard={card => <Card card={card} />}
@@ -92,7 +158,9 @@ class HomeScreen extends React.Component {
           }}
           useViewOverflow={Platform.OS === 'ios'}
         />
+          {/* </GestureRecognizer> */}
       </SafeAreaView>
+      // </GestureRecognizer>
     )
   }
 }
