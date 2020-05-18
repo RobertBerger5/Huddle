@@ -3,9 +3,72 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { Text, Tile } from 'react-native-elements'
 import { SafeAreaView } from 'react-navigation'
 import { TopPicksScreenPics } from '../constants/Restaurants'
+import openMap from 'react-native-open-maps';
 
 class TopPicksScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    const result = props.result;
+    const socket = props.socket;
+    var index = props.index;
+
+    this.socket = socket;
+    this.result = result;
+
+    this.state = {
+      top_results: [],
+    };
+    //example results console.log();
+    //onsole.log(result);
+  }
+
+  componentDidMount() {
+    this.socket.on('top_results', (top_results) => {
+      this.setState({ top_results });
+      console.log("Logging top picks");
+      console.log(this.state.top_results);
+    });
+
+    this.socket.emit('request_top_results');
+  }
+
+  componentWillUnmount() {
+    this.socket.off('top_results');
+  }
+
+  /*tileOnPress(lat, lng) {
+    openMap({ latitude: lat, longitude: lng, zoom: 18 });
+  }
+  ()) => this.tileOnPress(lat, lng)
+  */
+
+  tileOnPress(address) {
+    openMap({ end: address });
+  }
+
   render() {
+    var tiles = [];
+    let i = 0;
+    while(this.state.top_results[i]){
+      let lat = this.result.results[ this.state.top_results[i][0] ].lat;
+      let lng = this.result.results[ this.state.top_results[i][0] ].lng;
+      let address = this.result.results[ this.state.top_results[i][0] ].address;
+      tiles.push(
+        <Tile
+        imageSrc={{uri:this.result.results[ this.state.top_results[i][0] ].photo}}
+        activeOpacity={0.9}
+        title={this.result.results[ this.state.top_results[i][0] ].name}
+        titleStyle={styles.title}
+        caption={this.result.results[ this.state.top_results[i][0] ].price_level}
+        captionStyle={styles.caption}
+        featured
+        onPress = {() => this.tileOnPress(address)}
+      />
+      )
+      i++;
+
+    }
+
     return (
       <SafeAreaView>
         <ScrollView>
@@ -16,18 +79,9 @@ class TopPicksScreen extends React.Component {
             The restaurants you and your friends like the most
           </Text>
           <View style={styles.grid}>
-            {TopPicksScreenPics.map(({ pic, title, caption }, i) => (
-              <Tile
-                imageSrc={pic}
-                activeOpacity={0.9}
-                title={title}
-                titleStyle={styles.title}
-                caption={caption}
-                captionStyle={styles.caption}
-                featured
-                key={title}
-              />
-            ))}
+
+            {tiles}
+
           </View>
         </ScrollView>
       </SafeAreaView>

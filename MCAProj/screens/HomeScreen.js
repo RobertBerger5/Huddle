@@ -1,9 +1,10 @@
 import React from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import Swiper from 'react-native-deck-swiper'
-import { Card } from '../components/Card'
+import Card from '../components/Card'
 import { HomeScreenPics } from '../constants/Restaurants'
 import Entypo from 'react-native-vector-icons/Entypo';
+import { createStackNavigator } from '@react-navigation/stack';
 
 
 class HomeScreen extends React.Component {
@@ -11,9 +12,11 @@ class HomeScreen extends React.Component {
     super(props);
     const result = props.result;
     const socket = props.socket;
+    const navigation = props.navigation;
     var index = props.index;
     //example results console.log();
-    //onsole.log(result);
+    //console.log(result);
+    this.socket = socket;
   }
 
 
@@ -22,12 +25,20 @@ class HomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <Swiper
           cards={this.props.result.results}
-          renderCard={Card}
-          infinite
+          renderCard={card => <Card card={card} />}
+          cardIndex = {global.index}
+          infinite = {false}
           backgroundColor="white"
           cardHorizontalMargin={0}
-          stackSize={2}
+          stackSize={3} //TODO: check if this is right?
+          animateCardOpacity
           animateOverlayLabelsOpacity
+          showSecondCard
+          disableTopSwipe = {true}
+          disableBottomSwipe = {true}
+          onSwipedLeft = {(index) => {this.socket.emit('swipe', index, 1); global.index = index + 1;}}
+          onSwipedRight = {(index) => {this.socket.emit('swipe', index, 2); global.index = index + 1;}}
+          cardStyle={{justifyContent: 'center', alignItems: 'center'}}
           overlayLabels= {{
             left: {
             element: <Entypo name="thumbs-down" color= 'red' size={65} />,
@@ -44,8 +55,8 @@ class HomeScreen extends React.Component {
                   flexDirection: 'column',
                   alignItems: 'flex-end',
                   justifyContent: 'flex-start',
-                  marginTop: 30,
-                  marginLeft: -30
+                  paddingRight: 20,
+                  padding: 10
                 }
               }
             },
@@ -65,8 +76,8 @@ class HomeScreen extends React.Component {
                   flexDirection: 'column',
                   alignItems: 'flex-start',
                   justifyContent: 'flex-start',
-                  marginTop: 30,
-                  marginLeft: 30
+                  paddingLeft: 20,
+                  padding: 10
                 }
               }
             }
@@ -90,6 +101,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+    padding: 10
   },
 })
 

@@ -21,9 +21,6 @@ const status = { //TODO: indicator of if they agreed on a place or not? for anal
 const LEFT = 1;
 const RIGHT = 2;
 
-//TODO: SECURE SOMEHOW (either log IP's of whoever happens to write a client for this, or somehow go through the google play store and apple app store to make sure they're in our client app??)
-//I think just sanitize the hell out of user inputs, then log IP's for spamming and stop them at the io.use function
-
 //Google Places API key
 let apiKey = process.env.API_KEY;
 if (apiKey == null) {
@@ -44,11 +41,13 @@ const apiCall = yelp.client(apiKey);
 //Decide if were using a dummy call or not (for development purposes)
 const dummyApi = false;
 
-let db = true;
+let db = false;
 let dbpass = process.env.DB_PASS;
 let dbuser = process.env.DB_USER;
 let pool = null;
-if (dbpass == null) {
+if(!db){
+	//go through without complaint
+}else if (dbpass == null) {
 	console.log('DB_PASS or DB_USER missing in .env file, not using database');
 	db = false;
 } else {
@@ -73,13 +72,46 @@ app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/test.html');
 });
 
-/*app.get('/hack/', (req, res) => {
+app.get('/hack/', (req, res) => {
 	res.sendFile(__dirname + '/hacker.html');
-});*/
+});
 
 /*TODO:
 	start vote? 50% of room wants start -> start
 */
+
+var blacklist = {}; //deny these IP's
+try {
+	//synchronous because we want to do this at startup before starting to listen
+	let ips = fs.readFileSync('blacklist.txt', 'utf8').split('\n');
+	for (ip of ips) {
+		//add them to dictionary
+		blacklist[ip] = null;
+	}
+} catch (e) {
+	console.log('Error reading blacklist.txt: ', e.stack);
+	console.log('Note: this error will come up on server startup until someone gets themselves blacklisted');
+}
+console.log("Blacklisted IP's loaded: ");
+console.log(blacklist);
+
+/*global hash map to detect spammers, key=ip, */
+var ipInfo = {};
+function strike(socket, ip) {
+	socket.disconnect();
+	console.log(ip + " is spamming, disconnected");
+	if (++ipInfo[ip].strikes >= 3) {
+		//add ip to blacklisted users dictionary
+		blacklist[ip] = null;
+		//and to blacklist.txt
+		fs.appendFile('blacklist.txt', (ip) + '\n', (e) => {
+			if (e) {
+				throw e;
+			}
+			console.log('IP added to blacklist.txt');
+		});
+	}
+}
 
 /*global hash map for rooms with the key being the room id and value as object:
 	people = number of people
@@ -100,7 +132,7 @@ var rooms = {};
 	leave_ack: all clear, user has left succesfully (no string sent with it)
 	other_left: notification that someone else left, sends number of people in room now
 	started: all clear, begin swiping (no string sent with it)
-	ended: an hour has passed and the room has closed, everyone will be booted (can't figure out how to do that server-side, so politely request that the client boot themselves)
+	ended: an hour has passed and the room has closed, everyone will be booted
 	results: results from API call, sent ASAP on create or join
 	swipe_ack: swipe successful, take that restaurant out of the pile
 	top_results: sorted top results, as requested (array of 3-long arrays)
@@ -119,19 +151,30 @@ var rooms = {};
 */
 io.use(function (socket, next) { //authenticate using a secret password and hope they can't look at this part of the source code
 	//console.log("Query: ", socket.handshake.query);
-	if (true || socket.handshake.query.pass == serverPassword) {
-		return next();
+	let ip = socket.request.connection.remoteAddress;
+	if (ip in blacklist) {
+		console.log('Blacklisted user tried to connect');
+		next(new Error('USER IS BLACKLISTED'));
 	} else {
-		console.log('Someone tried to connect to the server with the wrong password');
-		next(new Error('Authentication error'));
+		return next();
 	}
 })
 
 io.on('connection', (socket) => {
 	//console.dir(socket);
-	console.log('user connected');
 	//start without a room by default. Also, users are only ever in one room at a time
 	socket.mainRoom = null;
+
+	let ip = socket.request.connection.remoteAddress;
+	if (!(ip in ipInfo)) {
+		ipInfo[ip] = {
+			joins: 0,
+			strikes: 0
+		}
+	}
+	//console.log(ipInfo[ip])
+
+	console.log('user with '+ipInfo[ip].strikes+' strikes connected');
 
 	//request to create a room
 	socket.on('create', (filters) => {
@@ -168,11 +211,17 @@ io.on('connection', (socket) => {
 		setTimeout(() => {
 			if (id in rooms) {
 				io.to(id).emit('ended');
-				//TODO: figure out how to boot em all
-				//delete rooms[id];
-				//console.log("deleting room " + id);
+				try {
+					console.log("time limit exceeded for room " + id);
+					//kick everyone out
+					for (s in io.sockets.adapter.rooms[id].sockets) {
+						console.log(s);
+						leaveRoom(io.sockets.sockets[s]);
+					}
+				} catch (e) {
+					console.err(e);
+				}
 			}
-			console.log("time limit exceeded for room " + id + ", everyone booted (boot themselves)");
 		}, MAX_TIME);
 		try {
 			//SEARCH for the API call
@@ -184,7 +233,17 @@ io.on('connection', (socket) => {
 	});
 
 	//request to join a room
-	socket.on('join', (id) => { //TODO: log IP's, keep track of who's spamming join requests
+	socket.on('join', (id) => {
+		//if a user tries to join more than 25 times in a second, disconnect them
+		ipInfo[ip].joins++;
+		setTimeout(() => {
+			ipInfo[ip].joins--;
+		}, 1000);
+		if (ipInfo[ip].joins > 25) {
+			strike(socket, ip);
+			return;
+		}
+
 		if (socket.mainRoom != null) {
 			socket.emit('user_err', 'Cannot join another room');
 			console.log("(someone tried to join a room while already in one)");
@@ -200,6 +259,7 @@ io.on('connection', (socket) => {
 		}
 
 		socket.join(id);//subscribe to socket.io room
+		//console.dir(io.sockets.adapter.rooms);
 		socket.mainRoom = id;//so we know which room they belong to
 		rooms[id].people++;//one more person in
 		if (rooms[id].people > rooms[id].maxPeople) {
@@ -241,7 +301,8 @@ io.on('connection', (socket) => {
 
 	//API results returned to user, and they're making choices
 	socket.on('swipe', (locI, swipe) => {
-		//user swiped 0 or 1 (LEFT or RIGHT) on {results.candidates[locI]}
+		//user swiped 0 or 1 (LEFT or RIGHT) on {results.results[locI]}
+		//note: locI is the index of the location in results.results, and clients are sending the "id" parameter of the object, which is always the same as the index in results.results on the server-side, but the client shuffles them. If the id is ever not the same as the index, change parts of this function, but for now it's convenient for finding which location it is fast
 		let id = socket.mainRoom;
 		if (id == null) {
 			socket.emit('user_err', 'Cannot swipe without being in a room');
@@ -277,12 +338,19 @@ io.on('connection', (socket) => {
 			return;
 		}
 		console.log("user requested top results");
-		socket.emit('top_results', rooms[id].votes.sort(compareSwipes));
+		let topResults = rooms[id].votes.slice();
+		topResults.sort(compareSwipes);
+		//just send the top three results, or less if there are just less restaurants
+		if (topResults.length > 3) {
+			topResults = topResults.slice(0, 3);
+		}
+		socket.emit('top_results', topResults);
+		//sends back an array of (at most) 3 arrays that look like this: [(location ID), (number of lefts), (number of rights)]
 	});
 });
 
 //open port
-http.listen(3000, () => {
+http.listen(3000, "0.0.0.0", () => {
 	console.log('listening on *:3000');
 });
 
@@ -313,7 +381,7 @@ function leaveRoom(socket) {
 	if (rooms[id].people <= 0) { //("<" shouldn't be necessary, but just in case)
 		//no one left, get rid of the empty room
 		if (db) {
-			if(rooms[id].results==null){
+			if (rooms[id].results == null) {
 				return;
 			}
 			//BUT FIRST! note some analytical data in the database!
@@ -330,8 +398,8 @@ function leaveRoom(socket) {
 			let rate = 1; //rating of restaurants, from 1-5 (I think)
 			let price = 1; //$, $$, or $$$
 			pool.query('INSERT INTO use_info (duration,status,people,lat,lng,places_found,type,range,rate,price) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [duration, status, people, lat, lng, places_found, type, range, rate, price]).then(res => {
-				console.log("(logged results from "+id+" to DB)");
-			}).catch(err =>{
+				console.log("(logged results from " + id + " to DB)");
+			}).catch(err => {
 				console.log("DB ERROR: ");
 				console.log(err);
 			});
@@ -479,12 +547,13 @@ console.log('limit is: ' + cardnum);
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
+		//TODO: search the specific business to get more than one photo for each restaurant
+		//https://www.yelp.com/developers/documentation/v3/business
 		io.to(id).emit('results', rooms[id].results);//send creator the results (and whoever else might've joined reeeeally fast)
-		//console.log(ret);
 	}).catch(e => {
 		console.log("API CALL ERROR: ");
 		console.log(e);
-		socket.emit('user_err','Something went wrong, please try again');
+		socket.emit('user_err', 'Something went wrong, try again later');
 	});
 }
 
@@ -500,8 +569,9 @@ function clean(places, rating) {
 		let cur = places.jsonBody.businesses[i];
 		//Our temp to push to our ret array
 		let temp = {
-			//lat: cur.geometry.location.lat, //latitude
-			//lng: cur.geometry.location.lng, //longitude
+			lat: cur.coordinates.latitude, //latitude
+			lng: cur.coordinates.longitude, //longitude
+			address: cur.location.display_address[0] + ", " + cur.location.display_address[1],
 			id: i,
 			distance: Math.round(10 * (cur.distance / 1609)) / 10,
 			name: cur.name, //place name

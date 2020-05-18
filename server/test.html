@@ -50,6 +50,9 @@
 		}
 
 
+		socket.on('disconnect',()=>{
+			log("DISCONNECTED","red");
+		});
 		socket.on('user_err', (msg) => {
 			log(msg, "red");
 		});
@@ -85,7 +88,7 @@
 		});
 		socket.on('ended', () => {
 			log('time up, everybody out', "#a00");
-			socket.emit('leave');
+			//socket.emit('leave');
 		});
 		socket.on('results', (results) => {
 			search_results = results;
@@ -95,6 +98,7 @@
 			log('swiped on ' + id + ', safe to remove from pile', '#6f6');
 		});
 		socket.on('top_results', (top) => {
+			console.log(top);
 			top_results = top;
 			log('(got top results, see top_results to view)', '#afa');
 		});

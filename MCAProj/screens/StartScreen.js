@@ -11,12 +11,14 @@ import Modal from 'react-native-modal';
 import CheckBox from 'react-native-check-box';
 
 //'http://65.128.45.107:3000'
-//'http://192.168.0.44:3000'
+//'http://192.168.0.17:3000'
+//'http://173.28.80.230:3000'
 
-const serverip = 'http://65.128.45.107:3000';
+//official server: 'http://161.35.54.15:3000'
+
+const serverip = 'http://161.35.54.15:3000';
 
 var {height, width} = Dimensions.get('window');
-
 
 class StartScreen extends React.Component {
     //Default constructor
@@ -24,8 +26,8 @@ class StartScreen extends React.Component {
       super(props);
      // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
-        //query:'pass=password',  
-        transports: ['websocket'], jsonp: false 
+        //query:'pass=password',
+        transports: ['websocket'], jsonp: false
       });
 
       this.socket.connect();
@@ -37,14 +39,21 @@ class StartScreen extends React.Component {
 
       this.socket.on('disconnect', () => {
         console.log('connection to server lost');
+        alert("Lost connection to server");
       });
+
+      this.socket.on('user_err',(msg)=>{
+        alert(msg);
+      })
 
       this.state ={
         isModalVisible: false,
         isChecked: false,
         cardnum: '50', 
       }
-  
+
+      global.index = 0;
+
     }
 
   joinFunc = () => {
@@ -88,8 +97,8 @@ render() {
           size={35}
          onPress={this.toggleModal}></Icon>
         {/* onPress={() => this.setState({isModalVisible: true})}></Icon> */}
-        
-        <Modal 
+
+        <Modal
         isVisible={this.state.isModalVisible}
         deviceWidth={width}
         deviceHeight={height}

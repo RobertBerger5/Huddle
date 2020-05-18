@@ -52,7 +52,7 @@ render() {
         <Text style={{color: 'white', fontSize: RFPercentage(5), textAlign: 'center', paddingBottom: 30, paddingHorizontal: 10}}>Waiting for host
         to start the session...</Text>
         </View>
-        <View style={{flex:3.5, justifyContent: 'flex-top', marginVertical:50}}>
+        <View style={{flex:3.5, /*(FOR SOME REASON THIS BREAKS ON ANDROID (Pixel 3) justifyContent: 'flex-top',*/ marginVertical:50}}>
         <Text style={[styles.appName, {paddingBottom: 30}]}>Total People in Room:</Text>
         <Text style={styles.appName}>{this.state.names}</Text>
         </View>

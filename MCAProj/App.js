@@ -8,6 +8,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { StatusBar, StyleSheet, View,} from 'react-native';
 import HomeScreen from './screens/HomeScreen.js';
 import TopPicksScreen from './screens/TopPicksScreen';
+import FinalTopScreen from './screens/FinalTopScreen.js';
 import StartScreen from './screens/StartScreen.js';
 import WaitScreen from './screens/WaitScreen.js';
 import HostWaitScreen from './screens/HostWaitScreen.js';
@@ -45,7 +46,7 @@ function MyTabs(props) {
 
       />
 
-      <Tab.Screen name="Top Picks" component={TopPicksScreen}
+      <Tab.Screen name="Top Picks" component={ () => <TopPicksScreen result = {result} socket = {socket} index = {index}/>}
               options={{
                 tabBarLabel: 'Top Picks',
                 tabBarIcon: ({ color, size }) => (
@@ -86,6 +87,7 @@ function MyStack() {
       <Stack.Screen name="Start" component={StartScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Top Picks" component={TopPicksScreen} />
+      <Stack.Screen name="Final" component={FinalTopScreen} />
       <Stack.Screen name="Swipe" component={Swipe} />
       <Stack.Screen name="Join" component={JoinScreen} />
       <Stack.Screen name="Wait" component={WaitScreen} />
