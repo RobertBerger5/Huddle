@@ -13,8 +13,6 @@ class HomeScreen extends React.Component {
     const socket = props.socket;
     const navigation = props.navigation;
     var index = props.index;
-    //example results console.log();
-    //console.log(result);
     this.socket = socket;
   }
 
