@@ -1,33 +1,28 @@
-//this is the main page
+//this is the main/starting page when opening our app
 import React from 'react';
 import { StyleSheet, TouchableOpacity, Button, Text, View, Dimensions, Image, Animated, PanResponder } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import { Dropdown } from 'react-native-material-dropdown';
-import io from "socket.io-client";
 import socketIO from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Entypo';
 import Modal from 'react-native-modal';
 import CheckBox from 'react-native-check-box';
-// import { useState } from 'react';
 
+//Our IP's
 //'http://65.128.45.107:3000'
 //'http://192.168.0.17:3000'
 //'http://173.28.80.230:3000'
-
 //official server: 'http://161.35.54.15:3000'
 
 const serverip = 'http://161.35.54.15:3000';
 
 var {height, width} = Dimensions.get('window');
 
-// const [check, setCheck] = useState(false);
 
 class StartScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
-     // this.state = {isModalVisible: false};
       this.socket = socketIO(serverip, {
         //query:'pass=password',
         transports: ['websocket'], jsonp: false
@@ -60,7 +55,6 @@ class StartScreen extends React.Component {
     }
 
   joinFunc = () => {
-   // alert("you joined!");
    navigation.navigate('Join')
   }
 
@@ -71,10 +65,9 @@ toggleModal = () => {
 
 
 
-//Our main render
 render() {
 
-
+//Data values for the settings dropdown
   let cards = [{
     value: '10',
   },{
@@ -86,27 +79,25 @@ render() {
   },{
     value: '50',
   }];
- // var isModalVisible = false;
+
     return (
-// FFE5CC
-//'#87bdd8'
       <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
       alignItems: 'center',}}>
 
       <View style={{ flex: 1, marginTop: height * 0.08, paddingLeft: width * 0.80, marginRight: 5}}>
+         {/* Create the icon and modal pannel for the settings */}
           <Icon
           name="cog"
           color='#a78d8a'
           size={35}
          onPress={this.toggleModal}></Icon>
-        {/* onPress={() => this.setState({isModalVisible: true})}></Icon> */}
-
         <Modal
         isVisible={this.state.isModalVisible}
         deviceWidth={width}
         deviceHeight={height}
         color = 'white'
         >
+          {/* View to define the settings modal */}
           <View style={{flex: 1, margin: 20, justifyContent: 'center'}}>
             <View style={{backgroundColor: '#fdf6f2', borderRadius: 12, padding: 20}}>
             <View style={{ flexDirection: 'row', justifyContent: 'center',  alignItems: 'center'}}>
@@ -116,15 +107,8 @@ render() {
               onClick={()=>{this.setState({isChecked:!this.state.isChecked})}}
               isChecked={this.state.isChecked}
               />
-              {/* <CheckBox
-              style={{flex: 1, padding: 10, margin: 10}}
-              onClick={()=> setCheck(!check)}
-              isChecked={check}
-              /> */}
               </View>
-
               <Dropdown
-                //style={styles.drop}
                 style={{marginBottom: 20}}
                 label='Max Restaurants Shown'
                 data={cards}
@@ -135,8 +119,6 @@ render() {
             </View>
           </View>
         </Modal>
-
-
 
       </View>
       <View style={{ flex: 1.5, justifyContent: 'flex-end'}}>
@@ -168,18 +150,13 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-    //fontFamily: 'Chalkduster',
-    //fontSize: 75,
     fontSize: RFPercentage(9.5),
     fontWeight: 'bold',
     color: '#a78d8a',
     padding: 20,
   },
   btn: {
-    // #daebe8
     backgroundColor: '#e18a7a',
-    //borderColor: 'grey',
-    //borderWidth: 0,
     borderRadius: 12,
     color: '#a78d8a',
     overflow: 'hidden',

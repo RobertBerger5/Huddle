@@ -1,13 +1,10 @@
 //the page to set preferences
 //the page to join a session and enter a code
-//this is the main page
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { Dropdown } from 'react-native-material-dropdown';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 
-import io from "socket.io-client";
-import socketIO from 'socket.io-client';
 
 class FilterScreen extends React.Component {
     //Default constructor
@@ -48,9 +45,9 @@ class FilterScreen extends React.Component {
 
     }
 
-//Our main render
 render() {
 
+  //Data options for the drop down menus
   let data = [{
     value: 'Restaurants',
   }, {
@@ -61,6 +58,8 @@ render() {
 
   let range = [{
     value: 'Any'
+  },{
+    value: '1/2 Miles'
   },{
     value: '1 Mile',
   },{
@@ -96,14 +95,10 @@ render() {
   }];
 
     return (
-// FFE5CC
-//'#87bdd8'
-//#667292
       <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
       alignItems: 'center'}}>
+        {/* View to keep everything in center of screen */}
         <View style={{marginTop: 50, marginBottom: 50, marginRight: 50, marginLeft: 50}}>
-        {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
-        {/* <Text style={[styles.appName, {marginTop: 50}]}>Type of place you want to go:</Text> */}
         <Text style={styles.appName}>Place Type:</Text>
 
         <Dropdown
@@ -113,8 +108,6 @@ render() {
         defaultValue='Restaurants'
         onChangeText = {type => this.setState({type})}
         />
-        {/* </View> */}
-        {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
         <Text style={styles.appName}>Max distance from you:</Text>
         <Dropdown
         style={styles.drop}
@@ -123,8 +116,6 @@ render() {
         defaultValue='Any'
         onChangeText = {range => this.setState({range})}
         />
-        {/* </View> */}
-        {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
         <Text style={styles.appName}>Minimum rating:</Text>
         <Dropdown
         style={styles.drop}
@@ -133,8 +124,6 @@ render() {
         defaultValue='Any'
         onChangeText = {rate => this.setState({rate})}
         />
-        {/* </View> */}
-        {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
         <Text style={styles.appName}>Price Range:</Text>
         <Dropdown
         style={styles.drop}
@@ -143,8 +132,6 @@ render() {
         defaultValue='Any'
         onChangeText = {price => this.setState({price})}
         />
-        {/* </View> */}
-        {/* <View style={{ flex: 1, justifyContent: 'center'}}> */}
         <TouchableOpacity
           style={styles.btn}
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
@@ -161,8 +148,6 @@ render() {
           }}>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Next</Text>
         </TouchableOpacity>
-
-        {/* </View> */}
         </View>
       </View>
 
@@ -171,13 +156,11 @@ render() {
 }
 
 const styles = StyleSheet.create({
+  //Styleheet for main text
   appName: {
-   // fontFamily: "Chalkduster",
     fontSize: RFPercentage(3.5),
     fontWeight: 'bold',
     color: '#a78d8a',
-    //: #8d9db6
-    //#f1e3dd
     padding: 5,
     paddingTop: 15,
   },
@@ -194,10 +177,6 @@ const styles = StyleSheet.create({
     margin: 20,
   },
   drop: {
-    //fontSize: 80,
-    // paddingRight: 40,
-    // paddingLeft: 40,
-    // paddingBottom: 10,
   }
 });
 

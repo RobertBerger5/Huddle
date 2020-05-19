@@ -1,13 +1,8 @@
-//the page where the person who started the session has the code and can see what users have joined and start the game
-
-
-//this is the main page
+//the page where the person who started the session 
+//has the code and can see what users have joined and start the game
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
-
-import io from "socket.io-client";
-import socketIO from 'socket.io-client';
 
 class HostWaitScreen extends React.Component {
     //Default constructor
@@ -41,35 +36,24 @@ class HostWaitScreen extends React.Component {
       this.setState({names: n});
     }
 
-  startFunc = () => {
-    alert("Started Game!");
-  }
-//Our main render
 render() {
 
     return (
-// FFE5CC
-//'#87bdd8'
-//#667292
       <View style={{ flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
       alignItems: 'center',}}>
         <View style={{marginVertical: 10, marginHorizontal: 40, justifyContent: 'space-between'}}>
+        {/* View that creates the box for the code */}
         <View style={[styles.box, {justifyContent: 'center', marginTop: 5}]}>
         <Text style={{color: '#a78d8a', fontSize: RFPercentage(6), textAlign: 'center', fontWeight: 'bold', padding: 20}}>Room Code: {this.state.code}</Text>
         </View>
+        {/* Button to start the game */}
         <TouchableOpacity
           style={styles.btn}
           onPress =  {() => this.socket.emit('start')}>
           <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start</Text>
         </TouchableOpacity>
-        {/*<Text style={{fontSize:12,textAlign:'center'}}>(Make sure your friends are all in before starting)</Text>*/}
         <Text style={styles.appName}>Total People in Room:</Text>
         <Text style={styles.appName}>{this.state.names}</Text>
-        {/* <TouchableOpacity
-          style={styles.btn}
-          onPress =  {() => this.props.navigation.navigate('Start')}>
-          <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Back</Text>
-        </TouchableOpacity> */}
         </View>
       </View>
 
@@ -79,15 +63,10 @@ render() {
 
 const styles = StyleSheet.create({
   appName: {
-    //fontFamily: "Chalkduster",
     fontSize: RFPercentage(4),
-    // fontSize: 35,
     fontWeight: 'bold',
     color: '#a78d8a',
     textAlign: 'center',
-    //: #8d9db6
-    //#f1e3dd
-    // padding: 20,
   },
   btn: {
     // #daebe8
