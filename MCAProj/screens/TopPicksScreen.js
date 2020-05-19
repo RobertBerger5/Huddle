@@ -2,7 +2,6 @@ import React from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Text, Tile } from 'react-native-elements'
 import { SafeAreaView } from 'react-navigation'
-import { TopPicksScreenPics } from '../constants/Restaurants'
 import openMap from 'react-native-open-maps';
 
 class TopPicksScreen extends React.Component {
@@ -18,8 +17,6 @@ class TopPicksScreen extends React.Component {
     this.state = {
       top_results: [],
     };
-    //example results console.log();
-    //onsole.log(result);
   }
 
   componentDidMount() {
@@ -36,11 +33,6 @@ class TopPicksScreen extends React.Component {
     this.socket.off('top_results');
   }
 
-  /*tileOnPress(lat, lng) {
-    openMap({ latitude: lat, longitude: lng, zoom: 18 });
-  }
-  ()) => this.tileOnPress(lat, lng)
-  */
 
   tileOnPress(address) {
     openMap({ end: address });
@@ -93,12 +85,10 @@ const styles = StyleSheet.create({
   h2Style: {
     fontWeight: 'bold',
     textAlign: 'center',
-   // color: '#000000',
     color: '#e18a7a',
   },
   h4Style: {
     textAlign: 'center',
-    //color: '#757575',
     color: '#a78d8a',
   },
   grid: {

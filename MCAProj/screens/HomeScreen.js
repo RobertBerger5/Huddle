@@ -2,7 +2,6 @@ import React from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import Swiper from 'react-native-deck-swiper'
 import Card from '../components/Card'
-import { HomeScreenPics } from '../constants/Restaurants'
 import Entypo from 'react-native-vector-icons/Entypo';
 import { createStackNavigator } from '@react-navigation/stack';
 import { BackHandler , StackActions} from 'react-native';
@@ -17,8 +16,6 @@ class HomeScreen extends React.Component {
     const socket = props.socket;
     const navigation = props.navigation;
     var index = props.index;
-    //example results console.log();
-    //console.log(result);
     this.socket = socket;
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
 

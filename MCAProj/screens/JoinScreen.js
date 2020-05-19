@@ -11,7 +11,6 @@ class JoinScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
-      //console.log("hi");
 
       const { socket } = this.props.route.params;
       this.socket = socket;
