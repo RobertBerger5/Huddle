@@ -2,7 +2,6 @@ import React from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Text, Tile } from 'react-native-elements'
 import { SafeAreaView } from 'react-navigation'
-import { TopPicksScreenPics } from '../constants/Restaurants'
 import openMap from 'react-native-open-maps';
 
 class TopPicksScreen extends React.Component {
