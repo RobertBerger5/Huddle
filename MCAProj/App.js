@@ -1,7 +1,7 @@
+//Our App.js that creates the navigation and tabs for our app
 import React from 'react'
 // import { AppLoading, Asset, Font, Icon } from 'expo'
 // import { StatusBar, StyleSheet, View, Text } from 'react-native'
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from './node_modules/@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -15,9 +15,7 @@ import HostWaitScreen from './screens/HostWaitScreen.js';
 import { createStackNavigator } from '@react-navigation/stack';
 import JoinScreen from './screens/JoinScreen.js';
 import FilterScreen from './screens/FilterScreen.js';
-import io from "socket.io-client";
-import socketIO from 'socket.io-client';
-import { BackHandler } from 'react-native';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -98,18 +96,6 @@ function MyStack() {
   );
 }
 
-// //to help reset the device back for swipe to home scrren
-// const defaultStackGetStateForAction =
-//   MyStack.router.getStateForAction;
-
-//   MyStack.router.getStateForAction = (action, state) => {
-//   if(state.index === 3 && action.type === NavigationActions.BACK){
-//     BackHandler.exitApp();
-//     return null;
-//   }
-
-//   return defaultStackGetStateForAction(action, state);
-// };
 
 export default class App extends React.Component {
   constructor(props) {
