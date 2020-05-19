@@ -1,7 +1,7 @@
 import React from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import Swiper from 'react-native-deck-swiper'
-import { Card } from '../components/Card'
+import Card from '../components/Card'
 import Entypo from 'react-native-vector-icons/Entypo';
 import { BackHandler , StackActions} from 'react-native';
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
@@ -147,6 +147,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     padding: 10
   },
-})
+});
 
 export default HomeScreen
