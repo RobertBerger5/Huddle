@@ -2,7 +2,6 @@ import React from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import Swiper from 'react-native-deck-swiper'
 import { Card } from '../components/Card'
-import { HomeScreenPics } from '../constants/Restaurants'
 import Entypo from 'react-native-vector-icons/Entypo';
 
 
@@ -12,8 +11,6 @@ class HomeScreen extends React.Component {
     const result = props.result;
     const socket = props.socket;
     var index = props.index;
-    //example results console.log();
-    //console.log(result);
     this.socket = socket;
   }
 

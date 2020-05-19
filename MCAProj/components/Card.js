@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: Layout.window.width - 30,
-    height: Layout.window.height - BOTTOM_BAR_HEIGHT * 6,
+    height: Layout.window.height - BOTTOM_BAR_HEIGHT * 4,
     borderRadius: 20,
     overflow: 'hidden',
   },
