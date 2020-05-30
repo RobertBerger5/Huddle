@@ -25,6 +25,7 @@ class HomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <Swiper
           cards={this.props.result.results}
+          //line is confusing, but it seems to be defining a function for how to render each card. Passes in the card to the Card class as an argument
           renderCard={card => <Card card={card} />}
           cardIndex = {global.index}
           infinite = {false}
@@ -36,8 +37,10 @@ class HomeScreen extends React.Component {
           showSecondCard
           disableTopSwipe = {true}
           disableBottomSwipe = {true}
-          onSwipedLeft = {(index) => {this.socket.emit('swipe', index, 1); global.index = index + 1;}}
-          onSwipedRight = {(index) => {this.socket.emit('swipe', index, 2); global.index = index + 1;}}
+          onSwipedLeft = {(index) => {this.socket.emit('swipe', this.props.result.results[index].id, 1); global.index = index + 1;}}
+          //TODO: don't emit the index, but the id of this card:
+          //  this.props.result.results[index].id? used to be just "index"
+          onSwipedRight = {(index) => {this.socket.emit('swipe', this.props.result.results[index].id, 2); global.index = index + 1;}}
           cardStyle={{justifyContent: 'center', alignItems: 'center'}}
           overlayLabels= {{
             left: {

@@ -26,7 +26,14 @@ class HostWaitScreen extends React.Component {
       });
 
       this.socket.on('results', (r) => {
-        results = r;
+        //shuffle
+        results = r.sort((a,b)=>{
+          if(Math.random()>.5){
+            return 1;
+          }else{
+            return 1;
+          }
+        });
       });
 
       this.socket.on('started',()=>{

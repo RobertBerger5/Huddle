@@ -41,7 +41,7 @@ const apiCall = yelp.client(apiKey);
 //Decide if were using a dummy call or not (for development purposes)
 const dummyApi = false;
 
-let db = false;
+let db = true;
 let dbpass = process.env.DB_PASS;
 let dbuser = process.env.DB_USER;
 let pool = null;
