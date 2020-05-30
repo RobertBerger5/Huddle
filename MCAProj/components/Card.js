@@ -49,6 +49,12 @@ const Card = ({ card }) => (
       imageStyle={{borderRadius:15}}
       source={{uri: card.photo}}
       indicator={ProgressBar}
+      indicatorProps={{
+        width: 150,
+        height: 12,
+        color: '	#808080',
+        borderColor:'	#808080',
+      }}
     />
     <View style={styles.photoDescriptionContainer}>
       <Text style={styles.text}>{card.name}</Text>

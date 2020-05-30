@@ -2,9 +2,10 @@ import React from 'react'
 import { SafeAreaView, StyleSheet, Text } from 'react-native'
 import Swiper from 'react-native-deck-swiper'
 import Card from '../components/Card'
-import { HomeScreenPics } from '../constants/Restaurants'
 import Entypo from 'react-native-vector-icons/Entypo';
-import { createStackNavigator } from '@react-navigation/stack';
+import { BackHandler , StackActions} from 'react-native';
+import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
+
 
 
 class HomeScreen extends React.Component {
@@ -14,14 +15,56 @@ class HomeScreen extends React.Component {
     const socket = props.socket;
     const navigation = props.navigation;
     var index = props.index;
-    //example results console.log();
-    //console.log(result);
     this.socket = socket;
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
+///backhandler is for the back on android
+  componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+    }
+
+    handleBackButtonClick() {
+      //potential options once the nav prop is passed correctly:
+            //this.props.navigation.dispatch(StackActions.popToTop());
+            //this.props.navigation.navigate('Start');
+            //this.props.navigation.pop(3);
+            // navigation.reset({
+            //   index: 0,
+            //   routes: [{ name: 'Start' }],
+            // });
+        return true;
+        }
+
+    onSwipeRight() {
+        //should be same as in handle button
+    }
 
   render() {
+
+    const config = {
+      velocityThreshold: 0.3,
+      directionalOffsetThreshold: 80
+    };
     return (
+
+      ///Gesture recognizer is to potnentially controll the iphone back swipe
+      // <GestureRecognizer
+      // // onSwipe={(direction, state) => this.onSwipe(direction, state)}
+      // // onSwipeUp={(state) => this.onSwipeUp(state)}
+      // // onSwipeDown={(state) => this.onSwipeDown(state)}
+      // // onSwipeLeft={(state) => this.onSwipeLeft(state)}
+      // onSwipeRight={() => this.onSwipeRight()}
+      // config={config}
+      // style={{
+      //   flex: 1,
+      //   backgroundColor: 'transparent'
+      // }}
+      // >
       <SafeAreaView style={styles.container}>
         <Swiper
           cards={this.props.result.results}
@@ -96,6 +139,7 @@ class HomeScreen extends React.Component {
           useViewOverflow={Platform.OS === 'ios'}
         />
       </SafeAreaView>
+      // </GestureRecognizer>
     )
   }
 }
@@ -106,6 +150,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     padding: 10
   },
-})
+});
 
 export default HomeScreen
