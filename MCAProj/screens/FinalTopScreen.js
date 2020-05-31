@@ -14,13 +14,13 @@ class FinalTopScreen extends React.Component {
   constructor(props) {
     super(props);
     const { socket } = this.props.route.params;
-    const {result } = this.props.route.params;
+    const {results } = this.props.route.params;
     this.socket = socket;
   }
 
   render () {
     return (
-      <TopPicksScreen result = {result} socket = {socket} index = {index}/>
+      <TopPicksScreen results = {results} socket = {socket} index = {index}/>
     )
   }
 }

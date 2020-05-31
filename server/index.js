@@ -41,7 +41,7 @@ const apiCall = yelp.client(apiKey);
 //Decide if were using a dummy call or not (for development purposes)
 const dummyApi = false;
 
-let db = true;
+let db = false;
 let dbpass = process.env.DB_PASS;
 let dbuser = process.env.DB_USER;
 let pool = null;
@@ -301,8 +301,8 @@ io.on('connection', (socket) => {
 
 	//API results returned to user, and they're making choices
 	socket.on('swipe', (locI, swipe) => {
-		//user swiped 0 or 1 (LEFT or RIGHT) on {results.results[locI]}
-		//note: locI is the index of the location in results.results, and clients are sending the "id" parameter of the object, which is always the same as the index in results.results on the server-side, but the client shuffles them. If the id is ever not the same as the index, change parts of this function, but for now it's convenient for finding which location it is fast
+		//user swiped 0 or 1 (LEFT or RIGHT) on {results[locI]}
+		//note: locI is the index of the location in results, and clients are sending the "id" parameter of the object, which is always the same as the index in results on the server-side, but the client shuffles them. If the id is ever not the same as the index, change parts of this function, but for now it's convenient for finding which location it is fast
 		let id = socket.mainRoom;
 		if (id == null) {
 			socket.emit('user_err', 'Cannot swipe without being in a room');
@@ -322,7 +322,7 @@ io.on('connection', (socket) => {
 			console.log("(someone tried to swipe on an index out of range)");
 			return;
 		}
-		console.log("user voted " + swipe + " for " + rooms[id].results.results[locI].name);
+		console.log("user voted " + swipe + " for " + rooms[id].results[locI].name);
 		rooms[id].votes[locI][swipe]++;
 		socket.emit('swipe_ack', locI);
 	});
@@ -362,7 +362,7 @@ function compareSwipes(a, b) {
 
 function initSwipes(room) {
 	room.votes = [];
-	for (let i = 0; i < room.results.results.length; i++) {
+	for (let i = 0; i < room.results.length; i++) {
 		room.votes.push([i, 0, 0]);
 	}
 }
@@ -392,7 +392,7 @@ function leaveRoom(socket) {
 			let people = rooms[id].maxPeople;
 			let lat = 0;
 			let lng = 0;
-			let places_found = rooms[id].results.results.length; //# of locations given to swipe through
+			let places_found = rooms[id].results.length; //# of locations given to swipe through
 			let type = rooms[id].filters.type;
 			let range = 10; //in miles (or whatever the user input unit is I guess)
 			let rate = 1; //rating of restaurants, from 1-5 (I think)
@@ -544,7 +544,7 @@ console.log('limit is: ' + cardnum);
 	apiCall.search(searchRequest).then(response => {
 		//console.log(response);
 		let ret = clean(response, rate);
-		console.log('room ' + id + ' has ' + ret.results.length + ' results');
+		console.log('room ' + id + ' has ' + ret.length + ' results');
 		rooms[id].results = ret;//remember it on the server
 		initSwipes(rooms[id]);
 		rooms[id].status = status.READY;
@@ -554,14 +554,14 @@ console.log('limit is: ' + cardnum);
 	}).catch(e => {
 		console.log("API CALL ERROR: ");
 		console.log(e);
-		socket.emit('user_err', 'Something went wrong, try again later');
+		socket.emit('user_err', 'Error with API Call: '+e.response.body);
 	});
 }
 
 //Clean the api results to just what we need YELP API
 function clean(places, rating) {
 	//create our return
-	var ret = { results: [] };
+	var ret = [];
 
 	//begin parsing our results
 	let i = 0;
@@ -583,7 +583,7 @@ function clean(places, rating) {
 		};
 
 		//Push cleaned values to returned array
-		if (temp.rating >= rating) ret.results.push(temp);
+		if (temp.rating >= rating) ret.push(temp);
 		i++; //increment to the next value
 	}
 
@@ -593,6 +593,7 @@ function clean(places, rating) {
 
 //for now, just return this object from Myles' API call
 function makeDummyCall() {
+	//TODO: update this.
 	console.log("dummyCall");
 	let ret = {
 		results: [

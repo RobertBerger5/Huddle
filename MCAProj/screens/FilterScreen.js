@@ -23,7 +23,8 @@ class FilterScreen extends React.Component {
       navigator.geolocation.getCurrentPosition(p => {
         let lat = p.coords.latitude;
         let long = p.coords.longitude;
-        this.setState({long: long, lat: lat})
+        this.setState({long: long, lat: lat});
+        console.log("LOCATION GOOD");
       });
 
       //initialize sockets passed from props
@@ -135,7 +136,9 @@ render() {
         <TouchableOpacity
           style={styles.btn}
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
-          onPress = {() => {this.socket.emit('create', {
+          onPress = {() => {
+            //TODO: don't let them press if latitude/longitude are null
+            this.socket.emit('create', {
               type: this.state.type,
               long: this.state.long,
               lat: this.state.lat,

@@ -23,14 +23,14 @@ class WaitScreen extends React.Component {
           if(Math.random()>.5){
             return 1;
           }else{
-            return 1;
+            return -1;
           }
         });
       });
 
       this.socket.on('started',()=>{
         console.log('started');
-        this.props.navigation.navigate('Swipe', {result: results, socket: socket});
+        this.props.navigation.navigate('Swipe', {results: results, socket: socket});
       });
 
     }

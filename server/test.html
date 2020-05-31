@@ -76,8 +76,8 @@
 		});
 		socket.on('started', () => {
 			console.log(search_results);
-			for (let i = 0; i < search_results.results.length; i++) {
-				let loc = search_results.results[i];
+			for (let i = 0; i < search_results.length; i++) {
+				let loc = search_results[i];
 				$('#results').append('\
 				<li class="result">'+ i + ": " + loc.name + '</li>\
 				<button onclick="swipe('+ i + ',1)">Left</button>\
@@ -91,7 +91,13 @@
 			//socket.emit('leave');
 		});
 		socket.on('results', (results) => {
-			search_results = results;
+			search_results = results.sort((a,b)=>{
+				if(Math.random()>.5){
+					return 1;
+				}else{
+					return 1;
+				}
+			});
 			log('(got results, see search_results to view)', '#afa');
 		});
 		socket.on('swipe_ack', (id) => {

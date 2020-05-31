@@ -25,7 +25,7 @@ console.disableYellowBox = true;
 function MyTabs(props) {
 
   //passed props for results and socket information
-  const result = props.result;
+  const results = props.results;
   const socket = props.socket;
   const index = 0;
 
@@ -34,7 +34,7 @@ function MyTabs(props) {
       //activeTintColor: '#e91e63',
       activeTintColor: '#e18a7a',
     }}>
-      <Tab.Screen name="Home" component={ () => <HomeScreen result = {result} socket = {socket} index = {index}/>}
+      <Tab.Screen name="Home" component={ () => <HomeScreen results = {results} socket = {socket} index = {index}/>}
               options={{
                 tabBarLabel: 'Home',
                 tabBarIcon: ({ color, size }) => (
@@ -45,7 +45,7 @@ function MyTabs(props) {
 
       />
 
-      <Tab.Screen name="Top Picks" component={ () => <TopPicksScreen result = {result} socket = {socket} index = {index}/>}
+      <Tab.Screen name="Top Picks" component={ () => <TopPicksScreen results = {results} socket = {socket} index = {index}/>}
               options={{
                 tabBarLabel: 'Top Picks',
                 tabBarIcon: ({ color, size }) => (
@@ -66,12 +66,12 @@ function MyTabs(props) {
 }
 
 function Swipe(props){
-  const { result } = props.route.params;
+  const { results } = props.route.params;
   const { socket } = props.route.params;
   return(
       <View style={styles.container}>
           <StatusBar hidden />
-       <MyTabs result = {result} socket = {socket}/>
+       <MyTabs results = {results} socket = {socket}/>
       </View>
   )
 }

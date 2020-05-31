@@ -7,12 +7,12 @@ import openMap from 'react-native-open-maps';
 class TopPicksScreen extends React.Component {
   constructor(props) {
     super(props);
-    const result = props.result;
+    const results = props.results;
     const socket = props.socket;
     var index = props.index;
 
     this.socket = socket;
-    this.result = result;
+    this.results = results;
 
     this.state = {
       top_results: [],
@@ -39,19 +39,29 @@ class TopPicksScreen extends React.Component {
   }
 
   render() {
+    //TODO: this is still going off of this.results index, which is now shuffled. Now, we need to find the result with id of top_results[i][0] instead
     var tiles = [];
     let i = 0;
     while(this.state.top_results[i]){
-      let lat = this.result.results[ this.state.top_results[i][0] ].lat;
-      let lng = this.result.results[ this.state.top_results[i][0] ].lng;
-      let address = this.result.results[ this.state.top_results[i][0] ].address;
+      let id=this.state.top_results[i][0];
+      let currResult=null;
+      for(let j=0;j<this.results.length;j++){
+        if(this.results[j].id==id){
+          currResult=this.results[j];
+          break;
+        }
+      }
+
+      let lat = currResult.lat;
+      let lng = currResult.lng;
+      let address = currResult.address;
       tiles.push(
         <Tile
-        imageSrc={{uri:this.result.results[ this.state.top_results[i][0] ].photo}}
+        imageSrc={{uri:currResult.photo}}
         activeOpacity={0.9}
-        title={this.result.results[ this.state.top_results[i][0] ].name}
+        title={currResult.name}
         titleStyle={styles.title}
-        caption={this.result.results[ this.state.top_results[i][0] ].price_level}
+        caption={currResult.price_level}
         captionStyle={styles.caption}
         featured
         onPress = {() => this.tileOnPress(address)}
