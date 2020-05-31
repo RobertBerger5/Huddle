@@ -12,8 +12,9 @@ class FilterScreen extends React.Component {
       super(props);
       this.state = {
         type: 'Restaurants',
-        long: '',
-        lat: '',
+        long: null,
+        lat: null,
+        hasLocation: false,
         range: 'Any',
         rate: 'Any',
         price: 'Any'
@@ -23,7 +24,7 @@ class FilterScreen extends React.Component {
       navigator.geolocation.getCurrentPosition(p => {
         let lat = p.coords.latitude;
         let long = p.coords.longitude;
-        this.setState({long: long, lat: lat});
+        this.setState({long: long, lat: lat, hasLocation: true});
         console.log("LOCATION GOOD");
       });
 
@@ -134,10 +135,12 @@ render() {
         onChangeText = {price => this.setState({price})}
         />
         <TouchableOpacity
-          style={styles.btn}
+          //if we haven't grabbed the location, make the button grey and don't allow the user to click it
+          style={[styles.btn, this.state.hasLocation?null:styles.btnDisabled]}
+          disabled={this.state.hasLocation?false:true}
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
           onPress = {() => {
-            //TODO: don't let them press if latitude/longitude are null
+            console.log("hasLocation: "+this.state.hasLocation);
             this.socket.emit('create', {
               type: this.state.type,
               long: this.state.long,
@@ -178,6 +181,10 @@ const styles = StyleSheet.create({
     padding: 20,
     textAlign:'center',
     margin: 20,
+  },
+  btnDisabled:{
+    backgroundColor: '#f6deda',
+    color:'grey'
   },
   drop: {
   }

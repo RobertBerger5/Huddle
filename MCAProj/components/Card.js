@@ -57,6 +57,7 @@ const Card = ({ card }) => (
       }}
     />
     <View style={styles.photoDescriptionContainer}>
+      {/*TODO: some restaurant names could run off the card, disable overflow-x?*/}
       <Text style={styles.text}>{card.name}</Text>
       <Text style={styles.text}>{card.price_level}</Text>
     </View>

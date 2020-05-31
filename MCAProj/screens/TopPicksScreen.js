@@ -4,6 +4,8 @@ import { Text, Tile } from 'react-native-elements'
 import { SafeAreaView } from 'react-navigation'
 import openMap from 'react-native-open-maps';
 
+//TODO: crashes when user has swiped through all restaurants
+
 class TopPicksScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -39,12 +41,12 @@ class TopPicksScreen extends React.Component {
   }
 
   render() {
-    //TODO: this is still going off of this.results index, which is now shuffled. Now, we need to find the result with id of top_results[i][0] instead
     var tiles = [];
     let i = 0;
     while(this.state.top_results[i]){
       let id=this.state.top_results[i][0];
       let currResult=null;
+      //there's probably a better way of going about this, but this'll do for finding which location card has that ID
       for(let j=0;j<this.results.length;j++){
         if(this.results[j].id==id){
           currResult=this.results[j];

@@ -69,6 +69,7 @@ class HomeScreen extends React.Component {
         <Swiper
           cards={this.props.results}
           //line is confusing, but it seems to be defining a function for how to render each card. Passes in the card to the Card class as an argument
+          //TODO: when users swipe through all cards, it crashes at this line
           renderCard={card => <Card card={card} />}
           cardIndex = {global.index}
           infinite = {false}
