@@ -23,6 +23,7 @@ var bannerAdUnitID = null;
 var intAdUnitID = null;
 
 async function showAd() {
+  //TODO: cancel from componentWillUnmount() somehow?
   await AdMobInterstitial.setAdUnitID(intAdUnitID); // Test ID, Replace with your-admob-unit-id
   await AdMobInterstitial.requestAdAsync({ servePersonalizedAds: true });
   await AdMobInterstitial.showAdAsync();
@@ -56,7 +57,8 @@ class StartScreen extends React.Component {
       isModalVisible: false,
       isChecked: false,
       cardnum: '50',
-      adShowing: true,
+      firstOpened: true,
+      adShowing: false,
     }
 
     global.index = 0;
@@ -64,7 +66,7 @@ class StartScreen extends React.Component {
     if (true) {
       //test ads, always use unless we're in production
       bannerAdUnitID = "ca-app-pub-3940256099942544/6300978111";
-      intAdUnitID = "ca-app-pub-3940256099942544/8691691433";
+      intAdUnitID = "ca-app-pub-3940256099942544/1033173712"; //video ad: "ca-app-pub-3940256099942544/8691691433"
     } else if (Platform.OS === 'android') {
       //TODO: carefully test if android ads load
       bannerAdUnitID = "ca-app-pub-3420284063429373/7355123212";
@@ -77,6 +79,16 @@ class StartScreen extends React.Component {
   }
 
   componentDidMount() {
+    this.props.navigation.addListener('blur',()=>{
+      //user navigated away, meaning we should give them an ad when they come back to this page
+      this.setState({firstOpened: false});
+    });
+    this.props.navigation.addListener('focus',()=>{
+      if(!this.state.firstOpened){
+        this.setState({adShowing:true});
+      }
+    })
+
     //after requestAdAsync
     AdMobInterstitial.addEventListener("interstitialDidLoad", () => {
       //console.log("interstitialDidLoad")
@@ -105,10 +117,6 @@ class StartScreen extends React.Component {
     AdMobInterstitial.removeAllListeners();
   }
 
-  joinFunc = () => {
-    navigation.navigate('Join')
-  }
-
   toggleModal = () => {
     var bool = this.state.isModalVisible;
     this.setState({ isModalVisible: !bool });
@@ -122,12 +130,6 @@ class StartScreen extends React.Component {
 
 
   renderMainContent() {
-
-    //TODO: only show when page is navigated to, and not every time it renders
-    if (this.state.adShowing) {
-      showAd();
-    }
-
     return (
       <View style={{
         flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
