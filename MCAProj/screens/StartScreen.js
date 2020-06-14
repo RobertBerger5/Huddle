@@ -7,6 +7,7 @@ import socketIO from 'socket.io-client';
 import Icon from 'react-native-vector-icons/Entypo';
 import Modal from 'react-native-modal';
 import CheckBox from 'react-native-check-box';
+import { AdMobBanner } from 'expo-ads-admob';
 
 //Our IP's
 //'http://65.128.45.107:3000'
@@ -62,6 +63,11 @@ toggleModal = () => {
   var bool = this.state.isModalVisible;
   this.setState({isModalVisible: !bool});
   };
+
+  bannerError(){
+    alert("Banner Error");
+    return;
+  }
 
 
 
@@ -140,6 +146,17 @@ render() {
           <Text style={{fontWeight: 'bold', fontSize: 20}}>Join Room</Text>
         </TouchableOpacity>
 
+      </View>
+
+      <View style={{flex:1, justifyContent:'flex-end'}}>
+      <AdMobBanner
+          style={{width: "100%"}}
+          bannerSize="fullBanner"
+          adUnitID="ca-app-pub-3940256099942544/6300978111" // Test ID for now
+          //android ad-unit-id: ca-app-pub-3420284063429373/7355123212
+          //ios ad-unit-id: ca-app-pub-3420284063429373/3409468336
+          servePersonalizedAds // true or false
+          onDidFailToReceiveAdWithError={this.bannerError} />
       </View>
 
       </View>

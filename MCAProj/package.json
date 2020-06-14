@@ -21,6 +21,7 @@
     "@shoutem/ui": "^2.0.8",
     "dependencies": "0.0.1",
     "expo": "^37.0.8",
+    "expo-ads-admob": "^8.1.0",
     "expo-asset": "~8.1.4",
     "expo-constants": "~9.0.0",
     "expo-font": "~8.1.1",
