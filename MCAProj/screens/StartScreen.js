@@ -19,6 +19,7 @@ const serverip = 'http://161.35.54.15:3000';
 
 var { height, width } = Dimensions.get('window');
 
+var inDevelopment=true;
 var bannerAdUnitID = null;
 var intAdUnitID = null;
 
@@ -63,7 +64,7 @@ class StartScreen extends React.Component {
 
     global.index = 0;
 
-    if (true) {
+    if (inDevelopment) {
       //test ads, always use unless we're in production
       bannerAdUnitID = "ca-app-pub-3940256099942544/6300978111";
       intAdUnitID = "ca-app-pub-3940256099942544/1033173712"; //video ad: "ca-app-pub-3940256099942544/8691691433"
