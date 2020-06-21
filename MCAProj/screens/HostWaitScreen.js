@@ -22,10 +22,10 @@ class HostWaitScreen extends React.Component {
       });
 
       this.socket.on('results', (r) => {
-        console.log(r);
+        //console.log(r);
         results=shuffleArray(r);
-        console.log("-----------------------------------");
-        console.log(results);
+        //console.log("-----------------------------------");
+        //console.log(results);
       });
 
       this.socket.on('started',()=>{
