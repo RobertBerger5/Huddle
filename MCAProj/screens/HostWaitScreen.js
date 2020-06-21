@@ -3,6 +3,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
+import shuffleArray from "../utils/shuffleArray.js";
 
 class HostWaitScreen extends React.Component {
     //Default constructor
@@ -22,14 +23,7 @@ class HostWaitScreen extends React.Component {
 
       this.socket.on('results', (r) => {
         console.log(r);
-        //shuffle
-        results = r.sort((a,b)=>{
-          if(Math.random()>.5){
-            return 1;
-          }else{
-            return -1;
-          }
-        });
+        results=shuffleArray(r);
         console.log("-----------------------------------");
         console.log(results);
       });
