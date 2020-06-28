@@ -8,16 +8,14 @@ class WaitScreen extends React.Component {
     //Default constructor
     constructor(props) {
       super(props);
-      const { socket } = this.props.route.params;
-      this.socket = socket;
 
       this.state = {names: 0};
 
-      this.socket.on('other_joined',(n)=>{
+      global.socket.on('other_joined',(n)=>{
         this.setNum(n);
       });
 
-      this.socket.on('results', (r) => {
+      global.socket.on('results', (r) => {
         //shuffle
         results = r.sort((a,b)=>{
           if(Math.random()>.5){
@@ -28,9 +26,9 @@ class WaitScreen extends React.Component {
         });
       });
 
-      this.socket.on('started',()=>{
+      global.socket.on('started',()=>{
         console.log('started');
-        this.props.navigation.navigate('Swipe', {results: results, socket: socket});
+        this.props.navigation.navigate('Swipe', {results: results});
       });
 
     }

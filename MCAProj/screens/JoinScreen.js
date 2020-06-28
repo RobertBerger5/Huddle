@@ -12,13 +12,10 @@ class JoinScreen extends React.Component {
     constructor(props) {
       super(props);
 
-      const { socket } = this.props.route.params;
-      this.socket = socket;
-
       this.state = {text: ''};
-      this.socket.on('join_ack', () => {
+      global.socket.on('join_ack', () => {
   			console.log('joined');
-        this.props.navigation.navigate('Wait', {socket: socket});
+        this.props.navigation.navigate('Wait');
       });
     }
 
@@ -39,7 +36,7 @@ render() {
           />
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.socket.emit('join', this.state.text) }>
+          onPress =  {() => global.socket.emit('join', this.state.text) }>
           <Text style={{fontWeight: 'bold', fontSize: 20, textAlign: 'center'}}>Join</Text>
         </TouchableOpacity>
         </View>

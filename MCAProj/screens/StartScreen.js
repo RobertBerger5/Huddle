@@ -33,23 +33,19 @@ class StartScreen extends React.Component {
   //Default constructor
   constructor(props) {
     super(props);
-    this.socket = socketIO(serverip, {
-      //query:'pass=password',
-      transports: ['websocket'], jsonp: false
-    });
 
-    this.socket.connect();
+    global.socket.connect();
 
-    this.socket.on('connect', () => {
+    global.socket.on('connect', () => {
       console.log('connected to socket server');
     });
 
-    this.socket.on('disconnect', () => {
+    global.socket.on('disconnect', () => {
       console.log('connection to server lost');
       alert("Lost connection to server");
     });
 
-    this.socket.on('user_err', (msg) => {
+    global.socket.on('user_err', (msg) => {
       alert(msg);
     })
 
@@ -184,21 +180,21 @@ class StartScreen extends React.Component {
 
         </View>
         <View style={{ flex: 1.5, justifyContent: 'flex-end' }}>
-          <Text style={styles.appName}>Convenir</Text>
+          <Text style={styles.appName}>Huddle</Text>
         </View>
 
         <View style={{ flex: 3.5, justifyContent: 'flex-start' }}>
           {/* Start Game button */}
           <TouchableOpacity
             style={styles.btn}
-            onPress={() => this.props.navigation.navigate('Filter', { socket: this.socket, cardnum: this.state.cardnum, access: this.state.isChecked })}>
+            onPress={() => this.props.navigation.navigate('Filter', { cardnum: this.state.cardnum, access: this.state.isChecked })}>
             <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Create Room</Text>
           </TouchableOpacity>
 
           {/* Join game button */}
           <TouchableOpacity
             style={styles.btn}
-            onPress={() => this.props.navigation.navigate('Join', { socket: this.socket })}>
+            onPress={() => this.props.navigation.navigate('Join')}>
             <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Join Room</Text>
           </TouchableOpacity>
 

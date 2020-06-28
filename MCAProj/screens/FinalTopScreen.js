@@ -13,14 +13,13 @@ import TopPicksScreen from './TopPicksScreen';
 class FinalTopScreen extends React.Component {
   constructor(props) {
     super(props);
-    const { socket } = this.props.route.params;
     const {results } = this.props.route.params;
-    this.socket = socket;
+    this.results = results;
   }
 
   render () {
     return (
-      <TopPicksScreen results = {results} socket = {socket} index = {index}/>
+      <TopPicksScreen results = {this.results} index = {global.index}/>
     )
   }
 }

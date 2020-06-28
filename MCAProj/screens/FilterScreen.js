@@ -28,10 +28,6 @@ class FilterScreen extends React.Component {
         console.log("LOCATION GOOD");
       });
 
-      //initialize sockets passed from props
-      const { socket } = this.props.route.params;
-      this.socket = socket;
-      
       //parameter for settings
       const { cardnum } = this.props.route.params;
       this.cardnum = cardnum;
@@ -40,9 +36,9 @@ class FilterScreen extends React.Component {
       this.access = access;
 
       //Listen for succesful creation
-      this.socket.on('created',(id)=>{
+      global.socket.on('created',(id)=>{
         console.log('created room '+id);
-        this.props.navigation.navigate('HostWait', {roomCode: id, socket: socket});
+        this.props.navigation.navigate('HostWait', {roomCode: id});
       });
 
     }
@@ -141,7 +137,7 @@ render() {
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
           onPress = {() => {
             console.log("hasLocation: "+this.state.hasLocation);
-            this.socket.emit('create', {
+            global.socket.emit('create', {
               type: this.state.type,
               long: this.state.long,
               lat: this.state.lat,

@@ -15,7 +15,14 @@ import HostWaitScreen from './screens/HostWaitScreen.js';
 import { createStackNavigator } from '@react-navigation/stack';
 import JoinScreen from './screens/JoinScreen.js';
 import FilterScreen from './screens/FilterScreen.js';
+import { useNavigation } from '@react-navigation/native';
+import socketIO from 'socket.io-client';
 
+const serverip = 'http://161.35.54.15:3000';
+global.socket = socketIO(serverip, {
+  //query:'pass=password',
+  transports: ['websocket'], jsonp: false
+});
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -26,7 +33,6 @@ function MyTabs(props) {
 
   //passed props for results and socket information
   const results = props.results;
-  const socket = props.socket;
   const index = 0;
 
   return (
@@ -34,7 +40,7 @@ function MyTabs(props) {
       //activeTintColor: '#e91e63',
       activeTintColor: '#e18a7a',
     }}>
-      <Tab.Screen name="Home" component={ () => <HomeScreen results = {results} socket = {socket} index = {index}/>}
+      <Tab.Screen name="Home" component={ () => <HomeScreen results = {results} index = {index} navigation = {useNavigation()}/>}
               options={{
                 tabBarLabel: 'Home',
                 tabBarIcon: ({ color, size }) => (
@@ -45,7 +51,7 @@ function MyTabs(props) {
 
       />
 
-      <Tab.Screen name="Top Picks" component={ () => <TopPicksScreen results = {results} socket = {socket} index = {index}/>}
+      <Tab.Screen name="Top Picks" component={ () => <TopPicksScreen results = {results} index = {index}/>}
               options={{
                 tabBarLabel: 'Top Picks',
                 tabBarIcon: ({ color, size }) => (
