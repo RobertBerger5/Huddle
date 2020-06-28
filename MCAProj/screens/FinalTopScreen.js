@@ -21,7 +21,7 @@ class FinalTopScreen extends React.Component {
     return (
       <View style={{flex: 1}}>
         <View style={{alignItems: 'flex-start'}}>
-          <Button title="Back" onPress={() => {global.socket.emit('leave'); this.props.navigation.popToTop()}} color='#e18a7a' />
+          <Button title="Back" onPress={() => {global.socket.emit('leave'); global.index = 0; this.props.navigation.popToTop()}} color='#e18a7a' />
         </View>
         <TopPicksScreen results = {this.results} index = {global.index}/>
       </View>
