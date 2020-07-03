@@ -5,18 +5,17 @@ import Card from '../components/Card'
 import Entypo from 'react-native-vector-icons/Entypo';
 import { BackHandler , StackActions} from 'react-native';
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
-
-
+import { useNavigation } from '@react-navigation/native';
 
 class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
     const results = props.results;
-    const socket = props.socket;
     const navigation = props.navigation;
+    this.navigation = navigation;
     var index = props.index;
-    this.socket = socket;
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+
   }
 
 ///backhandler is for the back on android
@@ -51,6 +50,11 @@ class HomeScreen extends React.Component {
       velocityThreshold: 0.3,
       directionalOffsetThreshold: 80
     };
+
+    if(index == this.props.results.length - 1) {
+      this.navigation.navigate('Final', {results: this.props.results});
+    }
+
     return (
 
       ///Gesture recognizer is to potnentially controll the iphone back swipe
@@ -82,8 +86,22 @@ class HomeScreen extends React.Component {
           showSecondCard
           disableTopSwipe = {true}
           disableBottomSwipe = {true}
-          onSwipedLeft = {(index) => {this.socket.emit('swipe', this.props.results[index].id, 1); global.index = index + 1;}}
-          onSwipedRight = {(index) => {this.socket.emit('swipe', this.props.results[index].id, 2); global.index = index + 1;}}
+          onSwipedLeft = {(index) => {
+            global.socket.emit('swipe', this.props.results[index].id, 1);
+            global.index = index + 1;
+            if(index == this.props.results.length - 1) {
+              this.navigation.navigate('Final', {results: this.props.results});
+            }
+          }}
+          //TODO: don't emit the index, but the id of this card:
+          //  this.props.results[index].id? used to be just "index"
+          onSwipedRight = {(index) => {
+            global.socket.emit('swipe', this.props.results[index].id, 2);
+            global.index = index + 1;
+            if(index == this.props.results.length - 1) {
+              this.navigation.navigate('Final', {results: this.props.results});
+            }
+          }}
           cardStyle={{justifyContent: 'center', alignItems: 'center'}}
           overlayLabels= {{
             left: {

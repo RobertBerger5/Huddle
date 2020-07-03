@@ -13,14 +13,18 @@ import TopPicksScreen from './TopPicksScreen';
 class FinalTopScreen extends React.Component {
   constructor(props) {
     super(props);
-    const { socket } = this.props.route.params;
     const {results } = this.props.route.params;
-    this.socket = socket;
+    this.results = results;
   }
 
   render () {
     return (
-      <TopPicksScreen results = {results} socket = {socket} index = {index}/>
+      <View style={{flex: 1}}>
+        <View style={{alignItems: 'flex-start'}}>
+          <Button title="Back" onPress={() => {global.socket.emit('leave'); global.index = 0; this.props.navigation.popToTop()}} color='#e18a7a' />
+        </View>
+        <TopPicksScreen results = {this.results} index = {global.index}/>
+      </View>
     )
   }
 }

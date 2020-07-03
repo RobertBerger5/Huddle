@@ -10,10 +10,8 @@ class TopPicksScreen extends React.Component {
   constructor(props) {
     super(props);
     const results = props.results;
-    const socket = props.socket;
     var index = props.index;
 
-    this.socket = socket;
     this.results = results;
 
     this.state = {
@@ -22,17 +20,17 @@ class TopPicksScreen extends React.Component {
   }
 
   componentDidMount() {
-    this.socket.on('top_results', (top_results) => {
+    global.socket.on('top_results', (top_results) => {
       this.setState({ top_results });
       console.log("Logging top picks");
       console.log(this.state.top_results);
     });
 
-    this.socket.emit('request_top_results');
+    global.socket.emit('request_top_results');
   }
 
   componentWillUnmount() {
-    this.socket.off('top_results');
+    global.socket.off('top_results');
   }
 
 

@@ -1,4 +1,4 @@
-//the page where the person who started the session 
+//the page where the person who started the session
 //has the code and can see what users have joined and start the game
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, TouchableOpacity} from 'react-native';
@@ -10,27 +10,25 @@ class HostWaitScreen extends React.Component {
     constructor(props) {
       super(props);
       const { roomCode } = this.props.route.params;
-      const { socket } = this.props.route.params;
 
       var results;
 
       this.state = {names: 1, code: roomCode};
-      this.socket = socket;
 
-      this.socket.on('other_joined',(n)=>{
+      global.socket.on('other_joined',(n)=>{
         this.setNum(n);
       });
 
-      this.socket.on('results', (r) => {
+      global.socket.on('results', (r) => {
         //console.log(r);
         results=shuffleArray(r);
         //console.log("-----------------------------------");
         //console.log(results);
       });
 
-      this.socket.on('started',()=>{
+      global.socket.on('started',()=>{
         console.log('started');
-        this.props.navigation.navigate('Swipe', {results: results, socket: socket});
+        this.props.navigation.navigate('Swipe', {results: results});
       });
 
     }
@@ -53,7 +51,7 @@ render() {
         {/* Button to start the game */}
         <TouchableOpacity
           style={styles.btn}
-          onPress =  {() => this.socket.emit('start')}>
+          onPress =  {() => global.socket.emit('start')}>
           <Text style={{fontWeight: 'bold',  fontSize: 20, textAlign:'center'}}>Start</Text>
         </TouchableOpacity>
         <Text style={styles.appName}>Total People in Room:</Text>
