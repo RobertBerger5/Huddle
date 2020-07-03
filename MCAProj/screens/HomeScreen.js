@@ -20,7 +20,7 @@ class HomeScreen extends React.Component {
   }
 
 ///backhandler is for the back on android
-  componentWillMount() {
+  componentDidMount() {
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
@@ -45,6 +45,7 @@ class HomeScreen extends React.Component {
     }
 
   render() {
+    //console.log("length: "+this.props.results.length);
 
     const config = {
       velocityThreshold: 0.3,
@@ -75,15 +76,13 @@ class HomeScreen extends React.Component {
           infinite = {false}
           backgroundColor="white"
           cardHorizontalMargin={0}
-          stackSize={3} //TODO: check if this is right?
+          stackSize={3}
           animateCardOpacity
           animateOverlayLabelsOpacity
           showSecondCard
           disableTopSwipe = {true}
           disableBottomSwipe = {true}
           onSwipedLeft = {(index) => {this.socket.emit('swipe', this.props.results[index].id, 1); global.index = index + 1;}}
-          //TODO: don't emit the index, but the id of this card:
-          //  this.props.results[index].id? used to be just "index"
           onSwipedRight = {(index) => {this.socket.emit('swipe', this.props.results[index].id, 2); global.index = index + 1;}}
           cardStyle={{justifyContent: 'center', alignItems: 'center'}}
           overlayLabels= {{

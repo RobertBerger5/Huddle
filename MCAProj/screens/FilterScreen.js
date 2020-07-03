@@ -25,7 +25,6 @@ class FilterScreen extends React.Component {
         let lat = p.coords.latitude;
         let long = p.coords.longitude;
         this.setState({long: long, lat: lat, hasLocation: true});
-        console.log("LOCATION GOOD");
       });
 
       //initialize sockets passed from props
@@ -137,7 +136,7 @@ render() {
         <TouchableOpacity
           //if we haven't grabbed the location, make the button grey and don't allow the user to click it
           style={[styles.btn, this.state.hasLocation?null:styles.btnDisabled]}
-          disabled={this.state.hasLocation?false:true}
+          disabled={!this.state.hasLocation}
           //onPress =  {() => this.props.navigation.navigate('HostWait')}>
           onPress = {() => {
             console.log("hasLocation: "+this.state.hasLocation);
@@ -152,7 +151,9 @@ render() {
               access: this.access
             });
           }}>
-          <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>Next</Text>
+          <Text style={{fontWeight: 'bold', fontSize: 20, textAlign:'center'}}>
+            {this.state.hasLocation?"Next":"(Locating...)"}
+          </Text>
         </TouchableOpacity>
         </View>
       </View>
