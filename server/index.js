@@ -186,9 +186,16 @@ io.on('connection', (socket) => {
 
 		//room id
 		let id = null;
+		const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		do {
 			//generate an id unique to the millisecond
-			id = (Date.now() % MAX_TIME).toString(36);
+			//id = (Date.now() % MAX_TIME).toString(36);
+
+			//new strategy: just keep randomly generating 4-letter room codes until we get an open one
+			id="";
+			for(let i=0;i<4;i++){
+				id+=letters[Math.floor(Math.random()*letters.length)];
+			}
 		} while (id in rooms);//and keep trying if it already exists
 		//(worst case: people wait while we create one new room per millisecond, which shouldn't be bad at all unless we get VERY popular)
 
@@ -196,9 +203,11 @@ io.on('connection', (socket) => {
 		socket.join(id); //socket.io join room
 		socket.mainRoom = id; //so we know which room they belong to
 		//initialize the room
+		//some of these are for potential future data analysis
 		rooms[id] = {
 			people: 1,
 			maxPeople: 1,
+			startTime:Date.now(),
 			filters: filters,
 			status: status.CREATED,
 			results: null,
@@ -387,8 +396,9 @@ function leaveRoom(socket) {
 			}
 			//BUT FIRST! note some analytical data in the database!
 			let currTime = Date.now() % MAX_TIME;
-			let duration = (currTime - parseInt(id, 36)) % MAX_TIME; //how long it was in ms
-			if (duration < 0) { duration += MAX_TIME }//TODO: check if this fixes overflow properly
+			//let duration = (currTime - parseInt(id, 36)) % MAX_TIME; //how long it was in ms
+			//if (duration < 0) { duration += MAX_TIME }//TODO: check if this fixes overflow properly
+			let duration = currTime - rooms[id].startTime;
 			let status = rooms[id].status;
 			let people = rooms[id].maxPeople;
 			let lat = 0;
