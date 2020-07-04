@@ -82,6 +82,7 @@ class StartScreen extends React.Component {
     });
     this.props.navigation.addListener('focus',()=>{
       if(!this.state.firstOpened){
+        global.socket.emit('leave'); //try leaving (whether or not they were actually in a room or not)
         this.setState({adShowing:true});
       }
     })

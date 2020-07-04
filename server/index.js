@@ -371,8 +371,9 @@ function initSwipes(room) {
 function leaveRoom(socket) {
 	let id = socket.mainRoom;
 	if (id == null) {
-		socket.emit('user_err', 'No room to leave');
-		console.log("(someone tried to leave without being in a room)");
+		//comment this out because now the client automatically leaves the room upon re-navigating to the start screen
+		//socket.emit('user_err', 'No room to leave');
+		//console.log("(someone tried to leave without being in a room)");
 		return;
 	}
 	socket.leave(id);
@@ -568,6 +569,10 @@ function clean(places, rating) {
 	while (places.jsonBody.businesses[i]) {
 		//get our current result values
 		let cur = places.jsonBody.businesses[i];
+		console.log(cur.name+": "+cur.image_url);
+		if(!cur.image_url){
+			cur.image_url="https://thumbs.dreamstime.com/b/no-image-available-icon-photo-camera-flat-vector-illustration-132483296.jpg";
+		}
 		//Our temp to push to our ret array
 		let temp = {
 			lat: cur.coordinates.latitude, //latitude
