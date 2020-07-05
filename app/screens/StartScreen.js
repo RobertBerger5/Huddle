@@ -11,7 +11,7 @@ import { AdMobBanner, AdMobInterstitial } from 'expo-ads-admob';
 
 var { height, width } = Dimensions.get('window');
 
-var inDevelopment=true;
+var inDevelopment = true;
 var bannerAdUnitID = null;
 var intAdUnitID = null;
 
@@ -52,30 +52,31 @@ class StartScreen extends React.Component {
 
     global.index = 0;
 
+    //which ads to use
     if (inDevelopment) {
       //test ads, always use unless we're in production
       bannerAdUnitID = "ca-app-pub-3940256099942544/6300978111";
       intAdUnitID = "ca-app-pub-3940256099942544/1033173712"; //video ad: "ca-app-pub-3940256099942544/8691691433"
     } else if (Platform.OS === 'android') {
-      //TODO: carefully test if android ads load
+      //TODO: carefully test if android ads load (they'll notice spamming reloads and flag the account)
       bannerAdUnitID = "ca-app-pub-3420284063429373/7355123212";
       intAdUnitID = "ca-app-pub-3420284063429373/6965569969";
     } else if (Platform.OS === 'ios') {
-      //TODO: carefully test if ios ads load
+      //TODO: carefully test if ios ads load (they'll notice spamming reloads and flag the account)
       bannerAdUnitID = "ca-app-pub-3420284063429373/3409468336";
       intAdUnitID = "ca-app-pub-3420284063429373/7157141655";
     }
   }
 
   componentDidMount() {
-    this.props.navigation.addListener('blur',()=>{
+    this.props.navigation.addListener('blur', () => {
       //user navigated away, meaning we should give them an ad when they come back to this page
-      this.setState({firstOpened: false});
+      this.setState({ firstOpened: false });
     });
-    this.props.navigation.addListener('focus',()=>{
-      if(!this.state.firstOpened){
+    this.props.navigation.addListener('focus', () => {
+      if (!this.state.firstOpened) {
         global.socket.emit('leave'); //try leaving (whether or not they were actually in a room or not)
-        this.setState({adShowing:true});
+        this.setState({ adShowing: true });
       }
     })
 
@@ -126,13 +127,17 @@ class StartScreen extends React.Component {
         alignItems: 'center',
       }}>
 
-        <View style={{ flex: 1, marginTop: height * 0.08, paddingLeft: width * 0.80, marginRight: 5 }}>
+        <View style={{ flex: 1.5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffcbce', width: '100%' }}>
+          <Text style={styles.appName}>Huddle</Text>
+        </View>
+
+        <View style={{ flex: 1, marginTop: 5, paddingLeft: width * 0.85, marginRight: 5 }}>
           {/* Create the icon and modal pannel for the settings */}
           <Icon
             name="cog"
             color='#a78d8a'
             size={35}
-            onPress={this.toggleModal}></Icon>
+            onPress={this.toggleModal} />
           <Modal
             isVisible={this.state.isModalVisible}
             deviceWidth={width}
@@ -173,23 +178,22 @@ class StartScreen extends React.Component {
           </Modal>
 
         </View>
-        <View style={{ flex: 1.5, justifyContent: 'flex-end' }}>
-          <Text style={styles.appName}>Huddle</Text>
-        </View>
 
-        <View style={{ flex: 3.5, justifyContent: 'flex-start' }}>
+        <View style={{ flex: 5, justifyContent: 'flex-start' }}>
           {/* Start Game button */}
           <TouchableOpacity
             style={styles.btn}
             onPress={() => this.props.navigation.navigate('Filter', { cardnum: this.state.cardnum, access: this.state.isChecked })}>
-            <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Create Room</Text>
+            <Icon name="plus" color='#d0656b' size={50} />
+            <Text style={{ fontSize: 35, color:'#d4d0d0' }}>Create</Text>
           </TouchableOpacity>
 
           {/* Join game button */}
           <TouchableOpacity
             style={styles.btn}
             onPress={() => this.props.navigation.navigate('Join')}>
-            <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Join Room</Text>
+              <Icon name="login" color='#d0656b' size={50} />
+            <Text style={{ fontSize: 35, color:'#d4d0d0' }}>Join</Text>
           </TouchableOpacity>
 
         </View>
@@ -223,7 +227,7 @@ class StartScreen extends React.Component {
           flex: 1, backgroundColor: '#fdf6f2', justifyContent: 'center',
           alignItems: 'center',
         }}>
-          <Text  style={{ fontWeight: 'bold', fontSize: 20 }}>Loading Advertisement...</Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 20 }}>Loading Advertisement...</Text>
         </View>
       )
     } else {
@@ -236,17 +240,17 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: RFPercentage(9.5),
     fontWeight: 'bold',
-    color: '#a78d8a',
-    padding: 20,
+    color: '#fd394d',
+    padding: 0,
   },
   btn: {
-    backgroundColor: '#e18a7a',
     borderRadius: 12,
-    color: '#a78d8a',
+    color: '#d4d0d0',
     overflow: 'hidden',
     padding: 20,
-    textAlign: 'center',
     margin: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 });
 
