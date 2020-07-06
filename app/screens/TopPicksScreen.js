@@ -1,5 +1,5 @@
 import React from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, RefreshControl, StyleSheet, View } from 'react-native'
 import { Text, Tile } from 'react-native-elements'
 import { SafeAreaView } from 'react-navigation'
 import openMap from 'react-native-open-maps';
@@ -16,7 +16,10 @@ class TopPicksScreen extends React.Component {
 
     this.state = {
       top_results: [],
+      refreshing: false
     };
+
+    this.onRefresh = this.onRefresh.bind(this)
   }
 
   componentDidMount() {
@@ -24,6 +27,7 @@ class TopPicksScreen extends React.Component {
       this.setState({ top_results });
       console.log("Logging top picks");
       console.log(this.state.top_results);
+      this.setState({refreshing: false});
     });
 
     global.socket.emit('request_top_results');
@@ -36,6 +40,11 @@ class TopPicksScreen extends React.Component {
 
   tileOnPress(address) {
     openMap({ end: address });
+  }
+
+  onRefresh() {
+    this.setState({refreshing: true});
+    global.socket.emit('request_top_results');
   }
 
   render() {
@@ -73,7 +82,11 @@ class TopPicksScreen extends React.Component {
 
     return (
       <SafeAreaView>
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing = {this.state.refreshing} onRefresh={this.onRefresh} />
+          }
+        >
           <Text h2 h2Style={styles.h2Style}>
             Top Picks
           </Text>
