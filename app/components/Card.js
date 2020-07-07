@@ -1,43 +1,12 @@
 
 import React from 'react'
 import { Platform, StyleSheet, View, Dimensions, Text } from 'react-native'
-import { Tile } from 'react-native-elements'
 import Layout from '../constants/Layout'
 import Image from 'react-native-image-progress';
 import ProgressBar from 'react-native-progress/Bar';
-//import {Image, Tile} from '@shoutem/ui'
+import { images, renderReview } from './assets/stars.js';
 
 const BOTTOM_BAR_HEIGHT = !Platform.isPad ? 29 : 49 // found from https://stackoverflow.com/a/50318831/6141587
-
-/*
-<View>
-  <Image
-    style={{
-      flex: 1,
-      height: null,
-      width: null,
-      resizeMode: "cover",
-      borderRadius: 35,
-      justifyContent: 'center'
-    }}
-    source={{uri: photo}}
-  />
-</View>
-
-
-<Image
-  style={{
-    flex: 1,
-    height: null,
-    width: Layout.window.width - 30,
-    resizeMode: "cover",
-    borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center'
-  }}
-  source={{uri: photo}}
-/>
-*/
 
 const Card = ({ card }) => (
   <View
@@ -58,8 +27,12 @@ const Card = ({ card }) => (
     />
     <View style={styles.photoDescriptionContainer}>
       {/*TODO: some restaurant names could run off the card, disable overflow-x?*/}
+      
       <Text style={styles.text}>{card.name}</Text>
       <Text style={styles.text}>{card.price_level}</Text>
+
+      <Image source={renderReview(card.rating)} />
+      
     </View>
   </View>
 )
@@ -96,7 +69,7 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'absolute',
     left: 10,
-    bottom: 10,
+    bottom: 25,
   },
   text: {
     textAlign: 'center',

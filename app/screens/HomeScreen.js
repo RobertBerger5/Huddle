@@ -15,7 +15,6 @@ class HomeScreen extends React.Component {
     this.navigation = navigation;
     var index = props.index;
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-
   }
 
 ///backhandler is for the back on android
