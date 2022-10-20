@@ -40,7 +40,7 @@
     "react-native-open-maps": "^0.3.5",
     "react-native-photo-view": "github:shoutem/react-native-photo-view#0ffa1481f6b6cb8663cb291b7db1d6644440584d",
     "react-native-progress": "^4.1.2",
-    "react-native-reanimated": "~1.7.0",
+    "react-native-reanimated": "~2.10.0",
     "react-native-responsive-fontsize": "^0.4.3",
     "react-native-safe-area-context": "0.7.3",
     "react-native-screens": "~2.2.0",
